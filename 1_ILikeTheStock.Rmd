@@ -3,38 +3,91 @@ title: "I Like the Stock"
 output: html_document
 ---
 
-# SP500
+# US Stock Market
 
 ```{r}
-rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
   pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,beepr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue)
 
   options(scipen=999)
   options(warn=-1)
   options(error = beep)
+```
 
-  files = list.files(path = "~/Dropbox/R/Stocks/Data",full.names = T,pattern = ".csv")
+```{r}
 
-  dataset = rbindlist(lapply(files,function(csv) read.csv(csv))) %>%
-    as_tibble() %>%
-    dplyr::mutate(Market.Cap=Market.Cap/1000000000) %>%
-    dplyr::filter(Market.Cap>10) %>%
-    arrange(desc(Market.Cap)) %>%
-    dplyr::select(Symbol,Name,Sector,Industry) %>% 
-    distinct()
+# Get Industry & Sector
+# https://www.nasdaq.com/market-activity/stocks/screener
+sector_industry_file = file.info(list.files(path = "Data",pattern = "nasdaq_screener",full.names = T)) %>% 
+  arrange(desc(mtime)) %>% 
+  slice(1) %>% 
+  row.names(.) %>% 
+  read.csv(file = .) %>% 
+  dplyr::select(Symbol,Sector,Industry)
 
-  symbols = unique(dataset$Symbol)
+# Get all symbols
+df_stocks = stockSymbols() %>% 
+  dplyr::select(Symbol,Name,Exchange,ETF) %>% 
+  filter(Exchange %in% c("NASDAQ","NYSE")) %>% 
+  group_by(Symbol) %>% 
+  filter(n()==1) %>% 
+  ungroup() %>% 
+  filter(!grepl("File Creation",Symbol)) %>% 
+  filter(!grepl("AXAC-R",Symbol))%>% 
+  filter(!grepl("ZCZZT",Symbol)) %>% 
+  inner_join(sector_industry_file)
+
+
+```
+
+
+```{r}
+
+metrics <- yahooQF(c("Name",
+                     "Currency",
+                     "Volume",
+                     "Market Capitalization",
+                     "P/E Ratio",
+                     "Price/EPS Estimate Next Year",
+                     "Price/Book",
+                     "Book Value",
+                     "Earnings/Share",
+                     "EPS Forward",
+                     "Dividend Yield",
+                     "Shares Outstanding",
+                     "Change From 52-week Low",
+                     "Percent Change From 52-week Low",
+                     "Change From 52-week High",
+                     "Percent Change From 52-week High",
+                     "52-week Low",
+                     "52-week High"))
+
+df_quotes = getQuote(Symbols = df_stocks$Symbol,what = metrics)
+df_quotes$Symbol = row.names(df_quotes)
+df_quotes = df_quotes %>% 
+  as_tibble() %>% 
+  dplyr::mutate(`Market Capitalization`=`Market Capitalization`/1000000000) %>% 
+  filter(`Market Capitalization`>0) %>% 
+  arrange(desc(`Market Capitalization`)) %>% 
+  inner_join(sector_industry_file)
+
+```
+
+
+```{r}
+
+tickers_filtered = df_quotes %>% 
+  top_n(n=10,wt=`Market Capitalization`)
+
+  symbols = unique(tickers_filtered$Symbol)
   
   pb <- progress_bar$new(
     format = "  Downloader :what [:bar] :percent eta: :eta",
-    total = ticker_length,
+    total = length(symbols),
     width= 60)
   
   # Stock data
-  stock_samples = 200
-  sampled_stocks = dataset %>% sample_n( stock_samples ) %>% pull(Symbol)
-  stock_data = data.frame()
-  for (symbol in sampled_stocks) {
+  stock_data =   rbindlist(lapply(symbols,function(symbol) {
     stock_symbol <- tryCatch({as.data.frame(getSymbols(symbol, env = NULL))},error=function(e) {e})
     if (class(stock_symbol)[1]=="simpleError") next;
     stock_symbol$Symbol = symbol
@@ -42,16 +95,18 @@ rm(list=ls())
     stock_symbol$Close = stock_symbol[,4]
     stock_symbol = stock_symbol[,c("Symbol","Date","Close")]
     row.names(stock_symbol) <- NULL
-    stock_data = bind_rows( stock_data , stock_symbol)
-  }
-  stock_data
+    stock_symbol
+  }))
+    
 ```
 
 
 ```{r}
 # Samples
+
   returns = data.frame()
-  while (0 < 1) {
+  i = 0
+  while (i < 500) {
     tryCatch(expr = {
     num_stocks = symbols = floor(runif(n = 1,min = 1,max = length(unique(stock_data$Symbol))))
     symbols = unique(stock_data$Symbol) %>% sample(num_stocks)
@@ -80,7 +135,7 @@ rm(list=ls())
       relocate(num_stocks,duration)
     )
     },error=function(e) { message(e)})
-
+ i = i + 1
   }
 ```
 
