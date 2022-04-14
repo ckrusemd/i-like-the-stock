@@ -9,8 +9,10 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
   pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue)
 
-  options(scipen=999)
-  options(warn=-1)
+options(scipen=999)
+options(warn=-1)
+
+source("money_theme.R")
 ```
 
 ```{r}
@@ -76,7 +78,7 @@ df_quotes = df_quotes %>%
 ```{r}
 
 tickers_filtered = df_quotes %>% 
-  top_n(n=10,wt=`Market Capitalization`)
+  top_n(n=100,wt=`Market Capitalization`)
 
   symbols = unique(tickers_filtered$Symbol)
   
@@ -95,17 +97,165 @@ tickers_filtered = df_quotes %>%
     stock_symbol = stock_symbol[,c("Symbol","Date","Close")]
     row.names(stock_symbol) <- NULL
     stock_symbol
-  }))
+  })) %>% 
+    dplyr::mutate(Date=ymd(Date))
     
 ```
 
+
+## Sectors & Industries
+
+### Sectors
+
+```{r}
+
+df_quotes %>% 
+  group_by(Sector) %>% 
+  dplyr::summarise(Market_Cap=sum(`Market Capitalization`)) %>% 
+  arrange(desc(Market_Cap)) %>% 
+  dplyr::mutate(Sector=factor(Sector,levels=rev(.$Sector))) %>% 
+  ggplot(.,aes(x=Sector,y=Market_Cap)) +
+  geom_col() +
+  coord_flip() +
+  theme_i_like_the_stock +
+  labs(title="Market Cap by Sector",
+       caption=timestamp_caption(),
+       y="Market Cap (Billions)",
+       x="Industry")
+
+```
+
+### Industries
+
+```{r}
+
+df_quotes %>% 
+  group_by(Industry) %>% 
+  dplyr::summarise(Market_Cap=sum(`Market Capitalization`)) %>% 
+  arrange(desc(Market_Cap)) %>% 
+  top_n(wt = Market_Cap,n = 40 ) %>% 
+  dplyr::mutate(Industry=factor(Industry,levels=rev(.$Industry))) %>% 
+  ggplot(.,aes(x=Industry,y=Market_Cap)) +
+  # theme(axis.text.y = element_text(size=2)) +
+  geom_col() +
+  coord_flip() +
+  theme_i_like_the_stock +
+  labs(title="Market Cap by Industry",
+       caption=timestamp_caption(),
+       y="Market Cap (Billions)",
+       x="Industry")
+
+```
+
+### Sector Rotations
+
+```{r}
+
+loess_adjust = function(data) {
+  # fit_smooth =  smooth.spline(x = data$Date,
+  #                 y = data$Growth, 
+  #                 all.knots = TRUE, 
+  #                 control.spar = list(low = -2, hight = 2))
+  # data %>% 
+  #   dplyr::mutate(VALUE=fit_smooth$y) %>% 
+  #   dplyr::mutate(VALUE=scale(VALUE,center=TRUE,scale=TRUE)) %>%
+  #   dplyr::mutate(ema=TTR::EMA(VALUE,9))
+  
+  grid <- expand.grid(span = seq(0.1, 0.5, len = 2), degree = c(1))
+  tr_control = trainControl(method = "repeatedcv",number = 5,repeats = 1)
+  fit_gam = suppressWarnings(expr =  { train(y = as.numeric(data$Growth),
+        x = data %>% dplyr::select(Date),
+        tuneGrid=grid,
+        method = "gamLoess") })
+  
+  data %>%
+    dplyr::mutate(Growth=predict(fit_gam,.)) # %>% 
+    # dplyr::mutate(Growth=scale(Growth,center=TRUE,scale=TRUE)) %>%
+    # dplyr::mutate(ema=TTR::EMA(VALUE,9))
+  
+}
+
+```
+
+
+```{r}
+df_gamed = stock_data %>% 
+  dplyr::mutate(six_months_ago=Date-months(6)) %>% 
+  inner_join( stock_data , by=c("six_months_ago"="Date","Symbol"="Symbol") ) %>% 
+  dplyr::mutate(Growth=Close.x/Close.y) %>% 
+  dplyr::select(Symbol,Date,Growth) %>% 
+  inner_join(df_quotes) %>% 
+  group_by(Date,Sector) %>% 
+  dplyr::summarise(Growth=sum(Growth)/n()) %>% 
+  group_by(Date) %>% 
+  dplyr::mutate(Growth=Growth/sum(Growth)) %>% 
+  dplyr::mutate(Growth=scale(Growth)) %>%
+  group_by(Sector) %>% 
+  na.omit() %>% 
+  do(loess_adjust(data = .)) 
+
+df_rotation_dates = df_gamed %>% 
+  dplyr::mutate(Uptrend=ifelse(Growth>0 & lag(Growth)<0,1,0),
+                Downtrend=ifelse(Growth<0 & lag(Growth)>0,1,0)) %>% 
+  gather(Trend,Value,Uptrend:Downtrend) %>% 
+  filter(Value==1)
+```
+
+```{r}
+df_rotation_dates %>% 
+  arrange(Sector,desc(Date)) %>% 
+  dplyr::mutate(Days_Since_Last=as.numeric(Date-lead(Date))) %>% 
+  dplyr::summarise(n_=n())
+```
+
+```{r}
+df_rotation_dates %>% 
+  arrange(Sector,desc(Date)) %>% 
+  dplyr::mutate(Days_Since_Last=as.numeric(Date-lead(Date))) %>% 
+  dplyr::summarise(sd_=sd(Days_Since_Last,na.rm=T))
+```
+
+
+```{r}
+df_gamed %>% 
+  # filter(Sector=="Basic Industries") %>% 
+  # filter(Industry %in% c("Internet and Information Services","Oil & Gas Production")) %>% 
+  ggplot(.,aes(x=Date,y=Growth,fill=Sector,color=Sector)) +
+  geom_line() +
+  # geom_line(aes(x=Date,y=VALUE)) +
+  # geom_smooth() +
+  theme_i_like_the_stock +
+  theme(legend.position = "bottom") +
+  geom_hline(yintercept = 0,linetype=2)
+```
+
+```{r}
+
+df_gamed %>% 
+  dplyr::mutate(six_months_ago=Date-months(6)) %>% 
+  # filter(Sector=="Basic Industries") %>% 
+  # filter(Industry %in% c("Internet and Information Services","Oil & Gas Production")) %>% 
+  ggplot(.,aes(x=Date,y=Growth,fill=Sector,color=Sector)) +
+  geom_line() +
+  # geom_line(aes(x=Date,y=VALUE)) +
+  # geom_smooth() +
+  theme_i_like_the_stock +
+  theme(legend.position = "bottom") +
+  geom_hline(yintercept = 0,linetype=2)
+```
+
+
+
+
+## Buy and Hold Simulation
 
 ```{r}
 # Samples
 
   returns = data.frame()
-  i = 0
-  while (i < 500) {
+  time_now = Sys.time()
+  while (Sys.time() < time_now + minutes(20)) {
+  # while (Sys.time() < time_now + hours(1)) {
     tryCatch(expr = {
     num_stocks = symbols = floor(runif(n = 1,min = 1,max = length(unique(stock_data$Symbol))))
     symbols = unique(stock_data$Symbol) %>% sample(num_stocks)
@@ -134,7 +284,6 @@ tickers_filtered = df_quotes %>%
       relocate(num_stocks,duration)
     )
     },error=function(e) { message(e)})
- i = i + 1
   }
 ```
 
@@ -149,7 +298,8 @@ tickers_filtered = df_quotes %>%
     scale_y_continuous(limits=c(-1,2),labels = scales::percent,breaks = seq(-1,2,by=0.25)) +
     scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
     geom_hline(yintercept = 0.18,linetype=2,color="red") +
-    geom_hline(yintercept = 0,linetype=2,color="lightseagreen",size=2)
+    geom_hline(yintercept = 0,linetype=2,color="lightseagreen") +
+    theme_i_like_the_stock
   
 ```
 
@@ -162,7 +312,8 @@ tickers_filtered = df_quotes %>%
     geom_boxplot() +
     scale_y_continuous(limits=c(-1,2),labels = scales::percent,breaks = seq(-1,2,by=0.25)) +
     geom_hline(yintercept = 0.18,linetype=2,color="red") +
-    geom_hline(yintercept = 0,color="lightseagreen",size=2)
+    geom_hline(yintercept = 0,color="lightseagreen") +
+    theme_i_like_the_stock
   
 ```
 
@@ -177,7 +328,8 @@ tickers_filtered = df_quotes %>%
     geom_smooth() +
     scale_y_continuous(limits=c(-3,0),labels = scales::percent,breaks = seq(-3,0,by=0.1)) +
     scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    geom_hline(yintercept = 0.12,linetype=2,color="red")
+    geom_hline(yintercept = 0.12,linetype=2,color="red") +
+    theme_i_like_the_stock
   
 ```
 
@@ -193,7 +345,8 @@ tickers_filtered = df_quotes %>%
     geom_smooth() +
     scale_y_continuous(limits=c(0,3),labels = scales::percent,breaks = seq(0,5,by=0.1)) +
     scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    geom_hline(yintercept = 0.12,linetype=2,color="red")
+    geom_hline(yintercept = 0.12,linetype=2,color="red") +
+    theme_i_like_the_stock
   
 ```
 
@@ -206,7 +359,8 @@ tickers_filtered = df_quotes %>%
     geom_point() +
     geom_smooth() +
     scale_y_continuous(limits=c(-1,1),labels = scales::percent,breaks = seq(-1,1,by=0.1)) +
-    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365)
+    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
+    theme_i_like_the_stock
   
 ```
 
@@ -218,13 +372,15 @@ returns %>%
   dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
   filter(annualized_return<3) %>% 
   ggplot(.,aes(x=yrs_held,y=num_stocks)) +
-  geom_tile(aes(fill=annualized_return))
+  geom_tile(aes(fill=annualized_return)) +
+    theme_i_like_the_stock
 
 ```
 
 ```{r}
 
 lm(annualized_return~num_stocks+duration,data = returns %>% dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1))
+
 ```
 
 

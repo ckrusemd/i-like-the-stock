@@ -4,7 +4,7 @@ base_line_size = base_size / 22
 base_rect_size = base_size / 22
 half_line <- base_size / 2
 
-theme_money_printer_go_brrr <- theme(
+theme_i_like_the_stock <- theme(
   line =               element_line(
     colour = "black", size = base_line_size,
     linetype = 1, lineend = "butt"
@@ -127,5 +127,5 @@ print_danish_time = function() {
 }
 
 timestamp_caption = function() {
-  return(paste0("Figure generated ",print_danish_time()," (github.com/ckrusemd/money-printer-go-brrr)"))
+  return(paste0("Figure generated ",print_danish_time()," (github.com/ckrusemd/i-like-the-stock)"))
 }
