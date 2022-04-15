@@ -4,18 +4,18 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>2 US Stock Market | I Like the Stock</title>
+  <title>2 Sectors &amp; Industries | I Like the Stock</title>
   <meta name="description" content="Daily updated insights to the US Stock Market." />
   <meta name="generator" content="bookdown 0.25 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="2 US Stock Market | I Like the Stock" />
+  <meta property="og:title" content="2 Sectors &amp; Industries | I Like the Stock" />
   <meta property="og:type" content="book" />
   
   <meta property="og:description" content="Daily updated insights to the US Stock Market." />
   <meta name="github-repo" content="ckrusemd/i-like-the-stock" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="2 US Stock Market | I Like the Stock" />
+  <meta name="twitter:title" content="2 Sectors &amp; Industries | I Like the Stock" />
   
   <meta name="twitter:description" content="Daily updated insights to the US Stock Market." />
   
@@ -133,15 +133,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <ul class="summary">
 <li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> I Like the Stock<span></span></a></li>
-<li class="chapter" data-level="2" data-path="us-stock-market.html"><a href="us-stock-market.html"><i class="fa fa-check"></i><b>2</b> US Stock Market<span></span></a>
+<li class="chapter" data-level="2" data-path="sectors-industries.html"><a href="sectors-industries.html"><i class="fa fa-check"></i><b>2</b> Sectors &amp; Industries<span></span></a>
 <ul>
-<li class="chapter" data-level="2.1" data-path="us-stock-market.html"><a href="us-stock-market.html#sectors-industries"><i class="fa fa-check"></i><b>2.1</b> Sectors &amp; Industries<span></span></a>
-<ul>
-<li class="chapter" data-level="2.1.1" data-path="us-stock-market.html"><a href="us-stock-market.html#sectors"><i class="fa fa-check"></i><b>2.1.1</b> Sectors<span></span></a></li>
-<li class="chapter" data-level="2.1.2" data-path="us-stock-market.html"><a href="us-stock-market.html#industries"><i class="fa fa-check"></i><b>2.1.2</b> Industries<span></span></a></li>
-<li class="chapter" data-level="2.1.3" data-path="us-stock-market.html"><a href="us-stock-market.html#sector-rotations"><i class="fa fa-check"></i><b>2.1.3</b> Sector Rotations<span></span></a></li>
-</ul></li>
-<li class="chapter" data-level="2.2" data-path="us-stock-market.html"><a href="us-stock-market.html#buy-and-hold-simulation"><i class="fa fa-check"></i><b>2.2</b> Buy and Hold Simulation<span></span></a></li>
+<li class="chapter" data-level="2.1" data-path="sectors-industries.html"><a href="sectors-industries.html#sectors"><i class="fa fa-check"></i><b>2.1</b> Sectors<span></span></a></li>
+<li class="chapter" data-level="2.2" data-path="sectors-industries.html"><a href="sectors-industries.html#industries"><i class="fa fa-check"></i><b>2.2</b> Industries<span></span></a></li>
+<li class="chapter" data-level="2.3" data-path="sectors-industries.html"><a href="sectors-industries.html#biggest-caps-by-sector"><i class="fa fa-check"></i><b>2.3</b> Biggest Caps by Sector<span></span></a></li>
+<li class="chapter" data-level="2.4" data-path="sectors-industries.html"><a href="sectors-industries.html#sector-rotations"><i class="fa fa-check"></i><b>2.4</b> Sector Rotations<span></span></a></li>
+<li class="chapter" data-level="2.5" data-path="sectors-industries.html"><a href="sectors-industries.html#buy-and-hold-simulation"><i class="fa fa-check"></i><b>2.5</b> Buy and Hold Simulation<span></span></a></li>
 </ul></li>
 </ul>
 
@@ -160,70 +158,98 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="us-stock-market" class="section level1 hasAnchor" number="2">
-<h1><span class="header-section-number">2</span> US Stock Market<a href="us-stock-market.html#us-stock-market" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="us-stock-market.html#cb1-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">FALSE</span>,<span class="at">message =</span> <span class="cn">FALSE</span>,<span class="at">warning =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-2"><a href="us-stock-market.html#cb1-2" aria-hidden="true" tabindex="-1"></a>  pacman<span class="sc">::</span><span class="fu">p_load</span>(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret)</span>
-<span id="cb1-3"><a href="us-stock-market.html#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="us-stock-market.html#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen=</span><span class="dv">999</span>)</span>
-<span id="cb1-5"><a href="us-stock-market.html#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">warn=</span><span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb1-6"><a href="us-stock-market.html#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="us-stock-market.html#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;money_theme.R&quot;</span>)</span></code></pre></div>
-<pre><code>## downloading set: 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 17 , 18 , 19 , 20 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 28 , 29 , 30 , 31 , 32 , 33 , 34 , 35 , 36 , 37 , 38 , 39 , ...done</code></pre>
-<div id="sectors-industries" class="section level2 hasAnchor" number="2.1">
-<h2><span class="header-section-number">2.1</span> Sectors &amp; Industries<a href="us-stock-market.html#sectors-industries" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div id="sectors" class="section level3 hasAnchor" number="2.1.1">
-<h3><span class="header-section-number">2.1.1</span> Sectors<a href="us-stock-market.html#sectors" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="sectors-industries" class="section level1 hasAnchor" number="2">
+<h1><span class="header-section-number">2</span> Sectors &amp; Industries<a href="sectors-industries.html#sectors-industries" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="sectors" class="section level2 hasAnchor" number="2.1">
+<h2><span class="header-section-number">2.1</span> Sectors<a href="sectors-industries.html#sectors" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p><img src="_main_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
-<div id="industries" class="section level3 hasAnchor" number="2.1.2">
-<h3><span class="header-section-number">2.1.2</span> Industries<a href="us-stock-market.html#industries" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="industries" class="section level2 hasAnchor" number="2.2">
+<h2><span class="header-section-number">2.2</span> Industries<a href="sectors-industries.html#industries" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p><img src="_main_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
-<div id="sector-rotations" class="section level3 hasAnchor" number="2.1.3">
-<h3><span class="header-section-number">2.1.3</span> Sector Rotations<a href="us-stock-market.html#sector-rotations" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<pre><code>## # A tibble: 12 × 2
+<div id="biggest-caps-by-sector" class="section level2 hasAnchor" number="2.3">
+<h2><span class="header-section-number">2.3</span> Biggest Caps by Sector<a href="sectors-industries.html#biggest-caps-by-sector" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p><img src="_main_files/figure-html/unnamed-chunk-8-1.png" width="384" /></p>
+</div>
+<div id="sector-rotations" class="section level2 hasAnchor" number="2.4">
+<h2><span class="header-section-number">2.4</span> Sector Rotations<a href="sectors-industries.html#sector-rotations" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<pre><code>## # A tibble: 116 × 5
+## # Groups:   Sector [13]
+##    Date       Sector               Growth Trend   Value
+##    &lt;date&gt;     &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;   &lt;dbl&gt;
+##  1 2010-03-22 &quot;&quot;                 0.00456  Uptrend     1
+##  2 2014-02-26 &quot;&quot;                 0.0184   Uptrend     1
+##  3 2016-05-12 &quot;&quot;                 0.00209  Uptrend     1
+##  4 2019-07-15 &quot;&quot;                 0.00141  Uptrend     1
+##  5 2021-11-11 &quot;&quot;                 0.00180  Uptrend     1
+##  6 2009-04-30 &quot;Basic Industries&quot; 0.00638  Uptrend     1
+##  7 2010-06-01 &quot;Basic Industries&quot; 0.00523  Uptrend     1
+##  8 2016-01-20 &quot;Basic Industries&quot; 0.0137   Uptrend     1
+##  9 2020-07-14 &quot;Basic Industries&quot; 0.000804 Uptrend     1
+## 10 2008-03-26 &quot;Capital Goods&quot;    0.00247  Uptrend     1
+## # … with 106 more rows</code></pre>
+<pre><code>## # A tibble: 13 × 6
+## # Groups:   Sector [13]
+##    Date       Sector                      Growth Trend     Value Days_Since_Flip
+##    &lt;date&gt;     &lt;chr&gt;                        &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;           &lt;dbl&gt;
+##  1 2020-10-08 &quot;Consumer Non-Durables&quot; -0.000207  Downtrend     1             554
+##  2 2020-12-08 &quot;Health Care&quot;           -0.0113    Downtrend     1             493
+##  3 2021-01-06 &quot;Technology&quot;            -0.00736   Downtrend     1             464
+##  4 2021-01-27 &quot;Miscellaneous&quot;         -0.0139    Downtrend     1             443
+##  5 2021-05-17 &quot;Consumer Durables&quot;     -0.0115    Downtrend     1             333
+##  6 2021-10-26 &quot;Consumer Services&quot;     -0.0196    Downtrend     1             171
+##  7 2021-11-10 &quot;Capital Goods&quot;         -0.0118    Downtrend     1             156
+##  8 2020-07-14 &quot;Basic Industries&quot;       0.000804  Uptrend       1             640
+##  9 2020-12-15 &quot;Transportation&quot;         0.00282   Uptrend       1             486
+## 10 2021-03-04 &quot;Energy&quot;                 0.00353   Uptrend       1             407
+## 11 2021-08-12 &quot;Finance&quot;                0.0000348 Uptrend       1             246
+## 12 2021-11-11 &quot;&quot;                       0.00180   Uptrend       1             155
+## 13 2021-12-28 &quot;Public Utilities&quot;       0.000587  Uptrend       1             108</code></pre>
+<pre><code>## # A tibble: 13 × 2
 ##    Sector                     n_
 ##    &lt;chr&gt;                   &lt;int&gt;
-##  1 &quot;&quot;                          7
-##  2 &quot;Basic Industries&quot;         11
-##  3 &quot;Capital Goods&quot;             8
-##  4 &quot;Consumer Non-Durables&quot;     8
-##  5 &quot;Consumer Services&quot;        10
-##  6 &quot;Energy&quot;                    8
-##  7 &quot;Finance&quot;                  10
-##  8 &quot;Health Care&quot;              11
-##  9 &quot;Miscellaneous&quot;             5
-## 10 &quot;Public Utilities&quot;         12
-## 11 &quot;Technology&quot;                3
-## 12 &quot;Transportation&quot;           15</code></pre>
-<pre><code>## # A tibble: 12 × 2
+##  1 &quot;&quot;                         10
+##  2 &quot;Basic Industries&quot;          8
+##  3 &quot;Capital Goods&quot;            12
+##  4 &quot;Consumer Durables&quot;         8
+##  5 &quot;Consumer Non-Durables&quot;    10
+##  6 &quot;Consumer Services&quot;         8
+##  7 &quot;Energy&quot;                    8
+##  8 &quot;Finance&quot;                   9
+##  9 &quot;Health Care&quot;               9
+## 10 &quot;Miscellaneous&quot;             8
+## 11 &quot;Public Utilities&quot;         11
+## 12 &quot;Technology&quot;                8
+## 13 &quot;Transportation&quot;            7</code></pre>
+<p><img src="_main_files/figure-html/unnamed-chunk-13-1.png" width="384" /></p>
+<pre><code>## # A tibble: 13 × 2
 ##    Sector                    sd_
 ##    &lt;chr&gt;                   &lt;dbl&gt;
-##  1 &quot;&quot;                       562.
-##  2 &quot;Basic Industries&quot;       535.
-##  3 &quot;Capital Goods&quot;          302.
-##  4 &quot;Consumer Non-Durables&quot;  432.
-##  5 &quot;Consumer Services&quot;      504.
-##  6 &quot;Energy&quot;                 426.
-##  7 &quot;Finance&quot;                324.
-##  8 &quot;Health Care&quot;            261.
-##  9 &quot;Miscellaneous&quot;          910.
-## 10 &quot;Public Utilities&quot;       207.
-## 11 &quot;Technology&quot;             643.
-## 12 &quot;Transportation&quot;         124.</code></pre>
-<p><img src="_main_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p><img src="_main_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
-</div>
-</div>
-<div id="buy-and-hold-simulation" class="section level2 hasAnchor" number="2.2">
-<h2><span class="header-section-number">2.2</span> Buy and Hold Simulation<a href="us-stock-market.html#buy-and-hold-simulation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+##  1 &quot;&quot;                       281.
+##  2 &quot;Basic Industries&quot;       551.
+##  3 &quot;Capital Goods&quot;          285.
+##  4 &quot;Consumer Durables&quot;      399.
+##  5 &quot;Consumer Non-Durables&quot;  282.
+##  6 &quot;Consumer Services&quot;      458.
+##  7 &quot;Energy&quot;                 480.
+##  8 &quot;Finance&quot;                192.
+##  9 &quot;Health Care&quot;            434.
+## 10 &quot;Miscellaneous&quot;          600.
+## 11 &quot;Public Utilities&quot;       245.
+## 12 &quot;Technology&quot;             978.
+## 13 &quot;Transportation&quot;         197.</code></pre>
 <p><img src="_main_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p><img src="_main_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<p><img src="_main_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="buy-and-hold-simulation" class="section level2 hasAnchor" number="2.5">
+<h2><span class="header-section-number">2.5</span> Buy and Hold Simulation<a href="sectors-industries.html#buy-and-hold-simulation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p><img src="_main_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p><img src="_main_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <p><img src="_main_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
 <pre><code>## 
 ## Call:
 ## lm(formula = annualized_return ~ num_stocks + duration, data = returns %&gt;% 
@@ -232,7 +258,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## 
 ## Coefficients:
 ## (Intercept)   num_stocks     duration  
-## 64111691103   -542096200    -14774251</code></pre>
+##   2.2945218   -0.0003619   -0.0007727</code></pre>
 
 </div>
 </div>

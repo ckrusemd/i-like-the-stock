@@ -1,7 +1,7 @@
 i-like-the-stock
-us-stock-market
 sectors-industries
 sectors
 industries
+biggest-caps-by-sector
 sector-rotations
 buy-and-hold-simulation
