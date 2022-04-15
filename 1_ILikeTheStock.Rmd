@@ -3,8 +3,6 @@ title: "I Like the Stock"
 output: html_document
 ---
 
-# US Stock Market
-
 ```{r}
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
   pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret)
@@ -78,7 +76,8 @@ df_quotes = df_quotes %>%
 ```{r}
 
 tickers_filtered = df_quotes %>% 
-  top_n(n=100,wt=`Market Capitalization`)
+  group_by(Industry) %>% 
+  top_n(n=10,wt=`Market Capitalization`)
 
   symbols = unique(tickers_filtered$Symbol)
   
@@ -89,6 +88,7 @@ tickers_filtered = df_quotes %>%
   
   # Stock data
   stock_data =   rbindlist(lapply(symbols,function(symbol) {
+    pb$tick()
     stock_symbol <- tryCatch({as.data.frame(getSymbols(symbol, env = NULL))},error=function(e) {e})
     if (class(stock_symbol)[1]=="simpleError") next;
     stock_symbol$Symbol = symbol
@@ -103,9 +103,9 @@ tickers_filtered = df_quotes %>%
 ```
 
 
-## Sectors & Industries
+# Sectors & Industries
 
-### Sectors
+## Sectors
 
 ```{r}
 
@@ -125,7 +125,7 @@ df_quotes %>%
 
 ```
 
-### Industries
+## Industries
 
 ```{r}
 
@@ -147,7 +147,30 @@ df_quotes %>%
 
 ```
 
-### Sector Rotations
+## Biggest Caps by Sector
+
+```{r fig.height=11,fig.width=4}
+
+df_quotes %>% 
+  group_by(Sector) %>% 
+  top_n(wt = `Market Capitalization`,n = 10) %>% 
+  dplyr::mutate(labels=paste0(Sector,Name)) %>% 
+  arrange(Sector,desc(`Market Capitalization`)) %>% 
+  dplyr::mutate(labels=factor(labels,levels=rev(unique(.$labels)))) %>% 
+  ggplot(.,aes(x=labels,y=`Market Capitalization`)) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~Sector,ncol=1,scales="free") +
+  scale_x_discrete(labels = function(x) gsub("Technology|Consumer Services|Capital Goods|Health Care|Miscellaneous|Consumer Non-Durables|Energy|Finance|Basic Industries|Public Utilities|Transportation||Consumer Durables", "", x)) +
+  theme_i_like_the_stock +
+  labs(title="Market Cap by Sector",
+       caption=timestamp_caption(),
+       y="Market Cap (Billions)",
+       x=NULL)
+
+```
+
+## Sector Rotations
 
 ```{r}
 
@@ -199,6 +222,21 @@ df_rotation_dates = df_gamed %>%
                 Downtrend=ifelse(Growth<0 & lag(Growth)>0,1,0)) %>% 
   gather(Trend,Value,Uptrend:Downtrend) %>% 
   filter(Value==1)
+
+df_rotation_dates
+```
+
+```{r}
+
+df_gamed %>% 
+  dplyr::mutate(Uptrend=ifelse(Growth>0 & lag(Growth)<0,1,0),
+                Downtrend=ifelse(Growth<0 & lag(Growth)>0,1,0)) %>% 
+  gather(Trend,Value,Uptrend:Downtrend) %>% 
+  # filter(Trend=="Uptrend") %>% 
+  filter(Value==1) %>% 
+  filter(Date==max(Date)) %>% 
+  dplyr::mutate(Days_Since_Flip=as.numeric(Sys.Date()-Date)) %>% 
+  arrange(Trend,desc(Days_Since_Flip))
 ```
 
 ```{r}
@@ -206,6 +244,39 @@ df_rotation_dates %>%
   arrange(Sector,desc(Date)) %>% 
   dplyr::mutate(Days_Since_Last=as.numeric(Date-lead(Date))) %>% 
   dplyr::summarise(n_=n())
+```
+
+```{r fig.height=5,fig.width=4 }
+
+df_trend_shifts = 
+  df_gamed %>% 
+  dplyr::mutate(Uptrend=ifelse(Growth>0 & lag(Growth)<0,1,0),
+                Downtrend=ifelse(Growth<0 & lag(Growth)>0,1,0)) %>% 
+  gather(Trend,Value,Uptrend:Downtrend) %>% 
+  # filter(Trend=="Uptrend") %>% 
+  filter(Value==1) %>% 
+  filter(Date==max(Date)) %>% 
+  ungroup() %>% 
+  rename(Shift_Date=Date)
+
+df_gamed %>% 
+  # inner_join( stock_data ) %>% 
+  left_join( df_trend_shifts %>% dplyr::select(Shift_Date,Sector,Trend,Value) ) %>% 
+  filter( Date >= Shift_Date ) %>% 
+  dplyr::select(Date,Shift_Date,Sector,Growth,Trend) %>% 
+  dplyr::mutate(Days_Since_Shift=as.numeric(Date-Shift_Date)) %>% 
+  group_by(Sector) %>% 
+  dplyr::mutate(Label=ifelse(Date==last(Date),Sector,NA)) %>% 
+  ungroup() %>% 
+  ggplot(.,aes(x=Days_Since_Shift,y=Growth,color=Sector)) +
+  geom_line(aes(color=Sector)) +
+  geom_hline(yintercept = 0,linetype=2) +
+  theme_i_like_the_stock +
+  theme(legend.position="bottom") +
+  facet_wrap(~Trend,ncol=1,scales = "free_y")  +
+  geom_text(aes(label=Label),vjust=1)
+
+
 ```
 
 ```{r}
@@ -254,7 +325,7 @@ df_gamed %>%
 
   returns = data.frame()
   time_now = Sys.time()
-  while (Sys.time() < time_now + minutes(20)) {
+  while (Sys.time() < time_now + minutes(60)) {
   # while (Sys.time() < time_now + hours(1)) {
     tryCatch(expr = {
     num_stocks = symbols = floor(runif(n = 1,min = 1,max = length(unique(stock_data$Symbol))))
