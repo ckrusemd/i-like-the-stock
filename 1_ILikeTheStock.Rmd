@@ -77,7 +77,7 @@ df_quotes = df_quotes %>%
 
 tickers_filtered = df_quotes %>% 
   group_by(Industry) %>% 
-  top_n(n=10,wt=`Market Capitalization`)
+  top_n(n=25,wt=`Market Capitalization`)
 
   symbols = unique(tickers_filtered$Symbol)
   
@@ -149,7 +149,7 @@ df_quotes %>%
 
 ## Biggest Caps by Sector
 
-```{r fig.height=11,fig.width=4}
+```{r fig.height=15,fig.width=4}
 
 df_quotes %>% 
   group_by(Sector) %>% 
@@ -316,7 +316,88 @@ df_gamed %>%
 ```
 
 
+### Elo approach
 
+```{r}
+
+df_elo = stock_data %>% 
+  inner_join( df_quotes ) %>% 
+  filter(!Sector=="") %>% 
+  dplyr::select(Sector,Industry,Symbol,Date,Close) %>% 
+  group_by(Symbol) %>% 
+  arrange(Symbol,Date) %>% 
+  dplyr::mutate(Incr=ifelse(((Close/lag(Close))-1)>0,1,0)) %>% 
+  dplyr::mutate(Rolling_Incr=zoo::rollsum(x = Incr,k = 90,NA)) %>% 
+  na.omit() %>% 
+  dplyr::select(-Close,-Incr) %>% 
+  group_by(Sector,Date) %>% 
+  dplyr::summarise(Rolling_Incr=mean(Rolling_Incr))
+
+df_skeleton = data.frame(t(combn(unique(df_elo$Sector),2))) %>% 
+  tidyr::crossing(Date=unique(df_elo$Date))
+
+df_elo_results = df_skeleton %>% 
+  
+  inner_join(df_elo,by=c("X1"="Sector","Date"="Date")) %>% 
+  na.omit() %>% 
+  
+  inner_join(df_elo,by=c("X2"="Sector","Date"="Date")) %>% 
+  na.omit() %>% 
+  dplyr::mutate(Rating=ifelse(Rolling_Incr.x>Rolling_Incr.y,1,
+                              ifelse(Rolling_Incr.x<Rolling_Incr.y,0,0.5))) %>% 
+  group_by(X1,X2) %>% 
+  dplyr::mutate(Date=data.table::frank(x = Date)) %>% 
+  dplyr::select(Date,X1,X2,Rating) %>% 
+  ungroup()
+  
+df_elo_calculation = 
+  df_elo_results %>% 
+  PlayerRatings::elo(.)
+
+  pb <- progress_bar$new(
+    format = "  Downloader :what [:bar] :percent eta: :eta",
+    total = 365,
+    width= 60)
+  
+  
+df_elo_calculation_all_dates = rbindlist(
+  lapply(tail(unique(df_elo_results$Date),365),function(date) {
+    
+    pb$tick()
+    PlayerRatings::elo(x = df_elo_results[df_elo_results$Date<=date,]) %>%
+    .[["ratings"]] %>% 
+    data.frame() %>% 
+    dplyr::mutate(Date=date) %>% 
+    dplyr::select(Date,Player,Rating)
+
+  })
+)
+
+df_elo_calculation_all_dates %>% 
+  dplyr::mutate(Rating=rescale(Rating,to=c(0,100))) %>% 
+  group_by(Player) %>% 
+  dplyr::mutate(Label=ifelse(Date==last(Date),Player,NA)) %>% 
+  ungroup() %>% 
+  ggplot(.,aes(x=Date,y=Rating,color=Player)) +
+  geom_line() +
+  theme_i_like_the_stock +
+  geom_hline(yintercept = 50,linetype=2)  +
+  geom_text(aes(label=Label),vjust=1)
+
+
+df_elo_calculation_all_dates %>% 
+  dplyr::mutate(Rating=rescale(Rating,to=c(0,100))) %>% 
+  filter(Date==max(Date)) %>% 
+  group_by(Player) %>% 
+  dplyr::mutate(Label=paste0(ifelse(Date==last(Date),Player,NA)," (",scales::number(Rating,accuracy = 1),")")) %>% 
+  ungroup() %>% 
+  ggplot(.,aes(x=Date,y=Rating,color=Player)) +
+  geom_line() +
+  theme_i_like_the_stock +
+  geom_hline(yintercept = 50,linetype=2)  +
+  geom_text(aes(label=Label),vjust=1)
+
+```
 
 ## Buy and Hold Simulation
 
