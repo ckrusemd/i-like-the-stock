@@ -98,8 +98,7 @@ tickers_filtered = df_quotes %>%
           row.names(stock_symbol) <- NULL
           stock_symbol
   
-      },error=function(e) {e})
-    if (class(stock_symbol)[1]=="simpleError") next;
+      },error=function(e) { data.frame() })
 
   })) %>% 
     dplyr::mutate(Date=ymd(Date))
