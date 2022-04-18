@@ -4,4 +4,5 @@ sectors
 industries
 biggest-caps-by-sector
 sector-rotations
+elo-approach
 buy-and-hold-simulation
