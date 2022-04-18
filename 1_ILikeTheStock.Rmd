@@ -77,7 +77,7 @@ df_quotes = df_quotes %>%
 
 tickers_filtered = df_quotes %>% 
   group_by(Industry) %>% 
-  top_n(n=25,wt=`Market Capitalization`)
+  top_n(n=40,wt=`Market Capitalization`)
 
   symbols = unique(tickers_filtered$Symbol)
   
@@ -89,14 +89,18 @@ tickers_filtered = df_quotes %>%
   # Stock data
   stock_data =   rbindlist(lapply(symbols,function(symbol) {
     pb$tick()
-    stock_symbol <- tryCatch({as.data.frame(getSymbols(symbol, env = NULL))},error=function(e) {e})
+    stock_symbol <- tryCatch({
+      
+          stock_symbol$Symbol = as.data.frame(getSymbols(symbol, env = NULL))
+          stock_symbol$Date = rownames(stock_symbol)
+          stock_symbol$Close = stock_symbol[,4]
+          stock_symbol = stock_symbol[,c("Symbol","Date","Close")]
+          row.names(stock_symbol) <- NULL
+          stock_symbol
+  
+      },error=function(e) {e})
     if (class(stock_symbol)[1]=="simpleError") next;
-    stock_symbol$Symbol = symbol
-    stock_symbol$Date = rownames(stock_symbol)
-    stock_symbol$Close = stock_symbol[,4]
-    stock_symbol = stock_symbol[,c("Symbol","Date","Close")]
-    row.names(stock_symbol) <- NULL
-    stock_symbol
+
   })) %>% 
     dplyr::mutate(Date=ymd(Date))
     
