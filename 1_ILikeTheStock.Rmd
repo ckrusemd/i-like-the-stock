@@ -5,7 +5,7 @@ output: html_document
 
 ```{r}
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,dev = "svg")
-install.packages('quantmod')
+install.packages('quantmod',repos = "http://cran.us.r-project.org")
   pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret,tidyquant)
 
 options(scipen=999)
@@ -52,7 +52,7 @@ draw_support_resistance = function(values) {
 fit_draw_fibonacci = function(low,high) {
   fibonaccis = round(low+(high-low)*c(0.236,0.382,0.50,0.618,0.786),digits = 1)
   list(geom_hline(yintercept = fibonaccis,linetype=2,color="gray60" ),
-       annotate(geom="text",x=Sys.Date(),y=fibonaccis,label=fibonaccis),size=2)
+       annotate(geom="text",x=Sys.Date(),y=fibonaccis,label=fibonaccis,size=2))
 }
 ```
 
