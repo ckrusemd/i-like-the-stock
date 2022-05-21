@@ -93,7 +93,7 @@ df_stocks = stockSymbols() %>%
 
 ## SP500
 
-```{r fig.height=20,fig.width=20}
+```{r sp500_1 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "^GSPC") %>% 
   ggplot(.,aes(x=Date,y=Value)) +
@@ -114,7 +114,7 @@ query_yahoo(ticker = "^GSPC") %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r sp500_2 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "^GSPC") %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
@@ -137,7 +137,7 @@ query_yahoo(ticker = "^GSPC") %>%
 
 ## C25
 
-```{r fig.height=20,fig.width=20}
+```{r c25_1 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "^OMXC25") %>% 
   ggplot(.,aes(x=Date,y=Value)) +
@@ -158,7 +158,7 @@ query_yahoo(ticker = "^OMXC25") %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r c25_2 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "^OMXC25") %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
@@ -183,7 +183,7 @@ query_yahoo(ticker = "^OMXC25") %>%
 
 ## BTC
 
-```{r fig.height=20,fig.width=20}
+```{r btc_1 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "BTC-USD") %>% 
   ggplot(.,aes(x=Date,y=Value)) +
@@ -199,7 +199,7 @@ query_yahoo(ticker = "BTC-USD") %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r btc_2 fig.height=20,fig.width=20}
 
 query_yahoo(ticker = "BTC-USD") %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
