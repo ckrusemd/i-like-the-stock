@@ -5,12 +5,46 @@ output: html_document
 
 ```{r}
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
-  pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret)
+  pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret,tidyquant)
 
 options(scipen=999)
 options(warn=-1)
 
 source("money_theme.R")
+```
+
+```{r}
+fit_draw_abline = function(date1,date2,value1,value2) {
+  
+  data.frame(Date=c(date1,date2),
+             GSPC.Close=c(value1,value2)) %>% 
+    lm(data = .,formula = GSPC.Close~Date) %>% 
+    coef(.) %>% 
+    as.numeric(.) %>% 
+    geom_abline(intercept = .[1],slope = .[2])
+  
+}
+```
+
+```{r}
+draw_support_resistance = function(values) {
+  geom_hline(yintercept = values,color="lightseagreen")
+}
+```
+
+```{r}
+fit_draw_fibonacci = function(low,high) {
+  fibonaccis = round(low+(high-low)*c(0.236,0.382,0.50,0.618,0.786),digits = 1)
+  list(geom_hline(yintercept = fibonaccis,linetype=2,color="gray60" ),
+       annotate(geom="text",x=Sys.Date(),y=fibonaccis,label=fibonaccis))
+}
+```
+
+```{r}
+draw_sma = function(values,data) {
+  print(data)
+  
+}
 ```
 
 ```{r}
@@ -39,6 +73,87 @@ df_stocks = stockSymbols() %>%
 
 ```
 
+# Index
+
+## SP500
+
+```{r fig.height=20,fig.width=20}
+
+getSymbols("^GSPC", env = NULL) %>% 
+  as.data.frame(.) %>% 
+  dplyr::mutate(Date=ymd(row.names(.))) %>% 
+  ggplot(.,aes(x=Date,y=GSPC.Close)) +
+  geom_line() +
+  fit_draw_abline(date1 = ymd("2022-01-01"),date2 = ymd("2020-01-01"),value1 = 4850,value2 = 3300) +
+  fit_draw_abline(date1 = ymd("2022-05-01"),date2 = ymd("2020-02-01"),value1 = 3901.36,value2 = 2120) +
+  fit_draw_abline(date1 = ymd("2022-01-21"),date2 = ymd("2022-02-23"),value1 = 4300,value2 = 4200) +
+  fit_draw_fibonacci(low = 0,high = 4705) +
+  draw_support_resistance(values = c(4800,3400,2900,2250,2150)) +
+  geom_ma(ma_fun = SMA, n =5*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =4*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =3*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =2*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =1*365.25,color="green",size=1) +
+  geom_ma(ma_fun = SMA, n =0.5*365.25,color="blue",size=1) +
+  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+  scale_y_continuous(breaks=seq(0,5000,by=100)) +
+  geom_vline(xintercept = Sys.Date(),linetype=2,color="gray50") +
+  theme_i_like_the_stock
+
+```
+
+
+## C25
+
+```{r fig.height=20,fig.width=20}
+
+getSymbols("^OMXC25", env = NULL) %>% 
+  as.data.frame(.) %>% 
+  dplyr::mutate(Date=ymd(row.names(.))) %>% 
+  ggplot(.,aes(x=Date,y=OMXC25.Close)) +
+  geom_line() +
+  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+  scale_y_continuous(breaks=seq(0,5000,by=100),limits = c(900,NA)) +
+  fit_draw_abline(date1 = ymd("2020-02-01"),date2 = ymd("2021-08-01"),value1 = 1360,value2 = 2000) +
+  fit_draw_abline(date1 = ymd("2020-03-15"),date2 = ymd("2021-11-01"),value1 = 1000,value2 = 1800) +
+  fit_draw_abline(date1 = ymd("2021-09-21"),date2 = ymd("2022-02-23"),value1 = 1840,value2 = 1650) +
+  fit_draw_fibonacci(low = 0,high = 2020) +
+  draw_support_resistance(values = c(2000,1800,1580,1450,1150)) +
+  geom_ma(ma_fun = SMA, n =5*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =4*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =3*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =2*365.25,color="red",size=1) +
+  geom_ma(ma_fun = SMA, n =1*365.25,color="green",size=1) +
+  geom_ma(ma_fun = SMA, n =0.5*365.25,color="blue",size=1) +
+  geom_vline(xintercept = Sys.Date(),linetype=2,color="gray50") +
+  theme_i_like_the_stock
+
+```
+
+# Crypto
+
+## BTC
+
+```{r fig.height=20,fig.width=20}
+
+getSymbols("BTC-USD", env = NULL) %>% 
+  as.data.frame(.) %>% 
+  dplyr::mutate(Date=ymd(row.names(.))) %>% 
+  # filter(Date>=ymd("2020-01-01")) %>% 
+  ggplot(.,aes(x=Date,y=`BTC-USD.Close`)) +
+  geom_line() +
+  fit_draw_fibonacci(low = 0,high = 67566.83) +
+  draw_support_resistance(values = c(30000,20000)) +
+  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+  scale_y_continuous(breaks=seq(0,70000,by=5000)) +
+  geom_vline(xintercept = Sys.Date(),linetype=2,color="gray50") +
+  theme_i_like_the_stock
+
+
+```
+
+
+# Stocks
 
 ```{r}
 
@@ -76,8 +191,9 @@ df_quotes = df_quotes %>%
 ```{r}
 
 tickers_filtered = df_quotes %>% 
-  group_by(Industry) %>% 
-  top_n(n=40,wt=`Market Capitalization`)
+  group_by(Sector) %>%
+  top_n(n=20,wt=`Market Capitalization`) %>% 
+  ungroup()
 
   symbols = unique(tickers_filtered$Symbol)
   
@@ -90,13 +206,13 @@ tickers_filtered = df_quotes %>%
   stock_data =   rbindlist(lapply(symbols,function(symbol) {
     pb$tick()
     stock_symbol <- tryCatch({
-      
-          stock_symbol$Symbol = as.data.frame(getSymbols(symbol, env = NULL))
-          stock_symbol$Date = rownames(stock_symbol)
-          stock_symbol$Close = stock_symbol[,4]
-          stock_symbol = stock_symbol[,c("Symbol","Date","Close")]
-          row.names(stock_symbol) <- NULL
-          stock_symbol
+          temp_df = as.data.frame(getSymbols(symbol, env = NULL))
+          temp_df$Symbol = symbol
+          temp_df$Date = rownames(temp_df)
+          temp_df$Close = temp_df[,4]
+          temp_df = temp_df[,c("Symbol","Date","Close")]
+          row.names(temp_df) <- NULL
+          temp_df
   
       },error=function(e) { data.frame() })
 
@@ -152,7 +268,7 @@ df_quotes %>%
 
 ## Biggest Caps by Sector
 
-```{r fig.height=15,fig.width=4}
+```{r fig.height=60,fig.width=20}
 
 df_quotes %>% 
   group_by(Sector) %>% 
@@ -402,141 +518,63 @@ df_elo_calculation_all_dates %>%
 
 ```
 
-## Buy and Hold Simulation
+# ETF
 
-```{r}
-# Samples
+## Nordnet ETF'er
 
-  returns = data.frame()
-  time_now = Sys.time()
-  while (Sys.time() < time_now + minutes(60)) {
-  # while (Sys.time() < time_now + hours(1)) {
-    tryCatch(expr = {
-    num_stocks = symbols = floor(runif(n = 1,min = 1,max = length(unique(stock_data$Symbol))))
-    symbols = unique(stock_data$Symbol) %>% sample(num_stocks)
+```{r eval=F}
+df_nordnet_etf = rbindlist(lapply(seq(15),function(x) {
+  
+    source_url = paste0("https://www.nordnet.dk/markedet/etf-lister?sortField=yield_1y&sortOrder=descending&page=",x)
+    nordnet_etf =
+      xml2::read_html(source_url) %>%
+      html_node("#main-content > div > div.PageWrapper__Outer-sc-1ur2ylx-0.kpJmDN > div > div > div > div.Box__StyledDiv-sc-1bfv3i9-0.gBipNb > div") %>%
+        html_children() %>% 
+        lapply(.,function(x) {
+          
+          x %>% html_children()  %>% html_text() %>% unlist() %>% t %>% as.data.frame()
+          # data.frame(
+          #   name=  x %>% html_children() %>% html_children() %>% rvest::html_attr("value")
+          # )
+        }) %>% 
+        rbindlist(.) %>% 
+      tail(-1) %>% 
+      setNames(.,c("buy","name","type","gain_today","gain_1yr","aaop","morningstar","V1","sustain","belaaning","owners","V2")) %>% 
+      dplyr::mutate(gain_today=as.numeric(gsub("%","",gsub("\\,","\\.",gain_today)))/100) %>% 
+      dplyr::mutate(gain_1yr=as.numeric(gsub("%","",gsub("\\,","\\.",gain_1yr)))/100) %>% 
+      dplyr::mutate(aaop=as.numeric(gsub("%","",gsub("\\,","\\.",aaop)))/100) %>% 
+      dplyr::mutate(morningstar=gsub(" stars","",morningstar)) %>% 
+      dplyr::mutate(belaaning=as.numeric(gsub("%","",belaaning))/100) %>% 
+      dplyr::mutate(owners=as.numeric(gsub("\\.","",owners)))
     
-    purchase_date = stock_data %>% filter(Symbol %in% symbols) %>% dplyr::select(Date) %>% sample_n(1) %>% pull(Date)
-    max_date = stock_data %>% filter(Date>purchase_date) %>% group_by(Symbol) %>% filter(Date==max(Date)) %>% ungroup() %>% summarise(Date=min(Date)) %>% pull(Date)
-    
-    duration = sample(seq(as.integer(difftime( max_date , purchase_date , units = "days"))),1)
-    if (duration<30) next;
-    
-    returns = bind_rows(returns,
-    stock_data %>% 
-      filter(Date %in% c( purchase_date, max_date )) %>% 
-      filter(Symbol %in% symbols) %>% 
-      group_by(Symbol) %>% 
-      dplyr::mutate(shares_purchased_sum=floor((10000/num_stocks))) %>% 
-      dplyr::mutate(shares_purchased=floor(shares_purchased_sum/first(Close))) %>% 
-      dplyr::mutate(shares_sell=shares_purchased*last(Close)) %>% 
-      dplyr::mutate(gains=shares_sell-shares_purchased_sum) %>% 
-      dplyr::select(Symbol,gains) %>% 
-      distinct() %>% 
-      ungroup() %>% 
-      dplyr::summarise(gains=sum(gains)/10000) %>% 
-      dplyr::mutate(num_stocks=num_stocks,
-                    duration=duration) %>% 
-      relocate(num_stocks,duration)
-    )
-    },error=function(e) { message(e)})
-  }
-```
-
-```{r }
-# Visualize
-  returns %>% 
-    dplyr::mutate(months=ceiling(duration/(365/12))) %>% 
-    dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-    ggplot(.,aes(x=duration,y=annualized_return)) +
-    geom_point(size=0.2) +
-    geom_smooth() +
-    scale_y_continuous(limits=c(-1,2),labels = scales::percent,breaks = seq(-1,2,by=0.25)) +
-    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    geom_hline(yintercept = 0.18,linetype=2,color="red") +
-    geom_hline(yintercept = 0,linetype=2,color="lightseagreen") +
-    theme_i_like_the_stock
+    Sys.sleep(floor(runif(n = 1,min = 20,max = 30)))
   
-```
-
-```{r }
-# Visualize
-  returns %>% 
-    dplyr::mutate(Years=factor(ceiling(duration/(365)))) %>% 
-    dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-    ggplot(.,aes(x=Years,y=annualized_return)) +
-    geom_boxplot() +
-    scale_y_continuous(limits=c(-1,2),labels = scales::percent,breaks = seq(-1,2,by=0.25)) +
-    geom_hline(yintercept = 0.18,linetype=2,color="red") +
-    geom_hline(yintercept = 0,color="lightseagreen") +
-    theme_i_like_the_stock
   
+}))
+
+df_nordnet_etf_pareto = df_nordnet_etf %>% 
+  dplyr::mutate(name=gsub("Germany","",name)) %>% 
+  filter(!is.na(gain_1yr)) %>% 
+  filter(!is.na(aaop)) %>% 
+  psel(df = . , pref = high(gain_1yr) * low(aaop) , top = nrow(.)) %>% 
+  filter(.level<5) %>% 
+  dplyr::mutate(.level=factor(.level))
+
+df_nordnet_etf_pareto %>% 
+  ggplot(.,aes(x=aaop,y=gain_1yr,color=.level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = scales::percent) +
+  facet_wrap(~.level) +
+  geom_text(aes(label=name),size=2)
+
+
+
+df_nordnet_etf_pareto %>% 
+  ggplot(.,aes(x=.level,y=gain_1yr,size=aaop,color=.level)) +
+  geom_point() +
+  scale_y_continuous(labels = scales::percent) +
+  geom_text(aes(label=name),size=2,vjust=-2)
 ```
-
-
-```{r}
-# Visualize
-  returns %>% 
-    dplyr::mutate(months=ceiling(duration/(365/12))) %>% 
-    dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-    ggplot(.,aes(x=duration,y=annualized_return)) +
-    geom_point() +
-    geom_smooth() +
-    scale_y_continuous(limits=c(-3,0),labels = scales::percent,breaks = seq(-3,0,by=0.1)) +
-    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    geom_hline(yintercept = 0.12,linetype=2,color="red") +
-    theme_i_like_the_stock
-  
-```
-
-
-```{r}
-# Visualize
-  returns %>% 
-    dplyr::mutate(months=ceiling(duration/(365/12))) %>% 
-    dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-    filter(annualized_return<3) %>% 
-    ggplot(.,aes(x=num_stocks,y=months)) +
-    geom_point(aes(color=annualized_return)) +
-    geom_smooth() +
-    scale_y_continuous(limits=c(0,3),labels = scales::percent,breaks = seq(0,5,by=0.1)) +
-    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    geom_hline(yintercept = 0.12,linetype=2,color="red") +
-    theme_i_like_the_stock
-  
-```
-
-```{r}
-# Visualize
-  returns %>% 
-    dplyr::mutate(months=ceiling(duration/(365/12))) %>% 
-    dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-    ggplot(.,aes(x=num_stocks,y=annualized_return)) +
-    geom_point() +
-    geom_smooth() +
-    scale_y_continuous(limits=c(-1,1),labels = scales::percent,breaks = seq(-1,1,by=0.1)) +
-    scale_x_continuous(breaks=seq(0,15*365,by=365),labels=seq(0,15*365,by=365)/365) +
-    theme_i_like_the_stock
-  
-```
-
-```{r}
-
-returns %>% 
-  dplyr::mutate(yrs_held=factor(floor(duration/(365))),
-                num_stocks=factor(num_stocks)) %>% 
-  dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1) %>% 
-  filter(annualized_return<3) %>% 
-  ggplot(.,aes(x=yrs_held,y=num_stocks)) +
-  geom_tile(aes(fill=annualized_return)) +
-    theme_i_like_the_stock
-
-```
-
-```{r}
-
-lm(annualized_return~num_stocks+duration,data = returns %>% dplyr::mutate(annualized_return=gains^(1/(duration/365.25))-1))
-
-```
-
-
 
