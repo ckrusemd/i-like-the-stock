@@ -1,8 +1,15 @@
 i-like-the-stock
+index
+sp500
+c25
+crypto
+btc
+stocks
 sectors-industries
 sectors
 industries
 biggest-caps-by-sector
 sector-rotations
 elo-approach
-buy-and-hold-simulation
+etf
+nordnet-etfer
