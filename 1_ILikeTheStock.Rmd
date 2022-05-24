@@ -254,7 +254,7 @@ df_quotes = df_quotes %>%
 
 tickers_filtered = df_quotes %>% 
   group_by(Sector) %>%
-  top_n(n=5,wt=`Market Capitalization`) %>% 
+  top_n(n=15,wt=`Market Capitalization`) %>% 
   ungroup()
 
   symbols = unique(tickers_filtered$Symbol)
@@ -352,6 +352,29 @@ df_quotes %>%
 ```
 
 ## Sector Rotations
+
+
+```{r fig.height=20,fig.width=20}
+
+  stock_data %>% 
+  group_by(Symbol) %>% 
+  arrange(Symbol,desc(Date)) %>% 
+  dplyr::mutate(Date=rev(frank(Date))) %>% 
+  filter(Date<=730) %>% 
+  dplyr::mutate(Date=rev(frank(Date))) %>% 
+  dplyr::mutate(Index=Close/last(Close)) %>% 
+  dplyr::select(Symbol,Date,Index) %>% 
+  inner_join(df_quotes) %>% 
+  dplyr::select(Sector,Industry,Symbol,Date,Index) %>% 
+  ggplot(.,aes(x=Date,y=Index,group=Symbol,color=Sector)) +
+  geom_line() +
+  facet_wrap(~Sector,scales="free_y") +
+  geom_hline(yintercept = 1,linetype=2) + 
+  theme_i_like_the_stock(base_size = 25) +
+  theme(legend.position="null")
+
+
+```
 
 ```{r}
 
