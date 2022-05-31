@@ -1,9 +1,14 @@
 i-like-the-stock
-index
+summary
 sp500
+nasdaq
 c25
-crypto
 btc
+index
+sp500-1
+c25-1
+crypto
+btc-1
 stocks
 sectors-industries
 sectors
