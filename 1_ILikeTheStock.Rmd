@@ -13,6 +13,12 @@ options(warn=-1)
 
 source("money_theme.R")
 ```
+```{r}
+
+readRenviron(path = "Renviron.site")
+fredr::fredr_set_key(key = Sys.getenv("FRED_API"))
+```
+
 
 ```{r}
 
