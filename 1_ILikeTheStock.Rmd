@@ -451,11 +451,12 @@ df_gspc %>%
 ```
 
 
-```{r fig.height=15,fig.width=15}
+```{r fig.height=20,fig.width=20}
 
 df_gspc %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
   draw_chart(.,width_ = 2) +
+  scale_x_date(date_breaks = "1 day",date_labels = "%d %a") +
   fit_draw_abline(date1 = ymd("2022-01-01"),date2 = ymd("2020-01-01"),value1 = 4850,value2 = 3300) +
   fit_draw_abline(date1 = ymd("2022-05-21"),date2 = ymd("2020-02-23"),value1 = 3901.36,value2 = 2191.86) +
   fit_draw_abline(date1 = ymd("2022-02-24"),date2 = ymd("2022-05-21"),value1 = 4114.65,value2 = 3801.36) +
@@ -484,12 +485,12 @@ df_C25 %>%
 ```
 
 
-```{r fig.height=15,fig.width=15}
+```{r fig.height=20,fig.width=20}
 
 df_C25 %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
   draw_chart(.,width_ = 2) +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+  scale_x_date(date_breaks = "1 day",date_labels = "%d %a") +
   scale_y_continuous(breaks=seq(0,5000,by=50),limits = c(900,NA)) +
   fit_draw_abline(date1 = ymd("2020-02-01"),date2 = ymd("2021-08-01"),value1 = 1360,value2 = 2000) +
   fit_draw_abline(date1 = ymd("2020-03-15"),date2 = ymd("2021-11-01"),value1 = 955,value2 = 1840) +
@@ -517,14 +518,14 @@ df_BTCUSD %>%
 ```
 
 
-```{r fig.height=15,fig.width=15}
+```{r fig.height=20,fig.width=20}
 
 df_BTCUSD %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
   draw_chart(.,width_ = 2) +
   fit_draw_fibonacci(low = 0,high = 68789.62) +
   draw_support_resistance(values = c(30000,20000)) +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+  scale_x_date(date_breaks = "1 day",date_labels = "%d %a") +
   scale_y_continuous(breaks=seq(0,70000,by=5000))
 
 
