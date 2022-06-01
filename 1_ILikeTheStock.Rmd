@@ -97,7 +97,12 @@ add_fomc_meeting_dates = function() {
                             ymd("2022-07-27"),
                             ymd("2022-09-21"),
                             ymd("2022-11-02"),
-                            ymd("2022-12-14")),linetype=2,color="#eb493a")
+                            ymd("2022-12-14"),
+                            ymd("2023-02-01"),
+                            ymd("2023-03-15"),
+                            ymd("2023-05-03"),
+                            ymd("2023-06-14"),
+                            ymd("2023-07-26")),linetype=2,color="#eb493a")
 }
 ```
 
@@ -146,6 +151,21 @@ df_gspc = query_yahoo(ticker = "^GSPC")
 df_C25 = query_yahoo(ticker = "^OMXC25") 
 df_BTCUSD = query_yahoo(ticker = "BTC-USD") 
 df_NASDAQ = query_yahoo(ticker = "^IXIC") 
+
+
+# df_iShares_STOXX_REALESTATE = query_yahoo(ticker = "EXI5.DE") 
+
+df_iShares_SP500_ENERGY = query_yahoo(ticker = "QDVF.DE") 
+df_iShares_SP500_CDISCRETIONARIES = query_yahoo(ticker = "QDVK.DE") 
+df_iShares_SP500_FINANCIALS = query_yahoo(ticker = "QDVH.DE") 
+df_iShares_SP500_COMMUNICATION = query_yahoo(ticker = "IU5C.DE") 
+df_iShares_SP500_HEALTHCARE = query_yahoo(ticker = "QDVG.DE") 
+df_iShares_SP500_SMALLCAP = query_yahoo(ticker = "IUS3.DE") 
+df_iShares_SP500_TECHNOLOGY = query_yahoo(ticker = "QDVE.DE") 
+
+df_GOLD = query_yahoo(ticker = "GC=F") 
+df_OIL = query_yahoo(ticker = "CL=F") 
+
 
 ```
 
@@ -209,27 +229,30 @@ df_yield_checkboard =
                 joined_series=factor(joined_series,levels=order_))
 ```
 
-```{r echo=FALSE}
-    # SP500
-    df_STOCKS_SP500 = 
-      df_gspc %>% 
+
+```{r}
+
+predict_by_yields = function(data)  {
+
+    df_values = 
+      data %>% 
       dplyr::select(Date,Value) %>%
       tidyr::complete(Date=seq.Date(from=min(Date,na.rm=T),to=max(Date,na.rm=T),by="1 day")) %>% 
       tidyr::fill(Value,.direction = "down")
     
-    df_predict_SP500 = df_yield_checkboard %>% 
+    df_predicting = df_yield_checkboard %>% 
       filter(series_id!=joined_series) %>% 
       dplyr::mutate(one_year_ahead=date+years(1)) %>% 
-      left_join(df_STOCKS_SP500,by=c("one_year_ahead"="Date")) %>% 
+      left_join(df_values,by=c("one_year_ahead"="Date")) %>% 
       unite(series_id,series_id,joined_series) %>% 
       dplyr::select(date,series_id,spread,Value) %>% 
       spread(series_id,spread)
     
-    fit_SP500 = caret::train(x = df_predict_SP500 %>% 
+    fit_rf = caret::train(x = df_predicting %>% 
                                   na.omit %>% 
                                   dplyr::select(-date,-Value) %>% 
                                   data.frame(),
-                             y = df_predict_SP500 %>% 
+                             y = df_predicting %>% 
                                na.omit %>% 
                                .[["Value"]],
                              method = "rf",
@@ -238,345 +261,182 @@ df_yield_checkboard =
                              metric = "RMSE",
                              trControl=train_control)
     
-    df_predict_SP500 =
-      df_predict_SP500 %>% 
-      dplyr::mutate(pred_SP500=predict(fit_SP500,.)) %>% 
-      dplyr::select(date,pred_SP500,Value) %>%
+    df_predicted =
+      df_predicting %>% 
+      dplyr::mutate(pred_value=predict(fit_rf,.)) %>% 
+      dplyr::select(date,pred_value,Value) %>%
       dplyr::mutate(date=date+years(1)) %>%
-      gather(pred,val,pred_SP500:Value) %>%
+      gather(pred,val,pred_value:Value) %>%
       tidyr::crossing(one_year=c(TRUE,FALSE)) %>% 
       dplyr::mutate(date=ifelse(one_year,
                                 ifelse(date>=Sys.Date()-years(1),date,NA),date)) %>% 
       filter(!is.na(date)) %>% 
       dplyr::mutate(date=as.Date(date,origin="1970-01-01"))
-```
-
-```{r}
-  # NASDAQ
-  df_STOCKS_NASDAQCOM = 
-      df_NASDAQ %>% 
-      dplyr::select(Date,Value) %>%
-      tidyr::complete(Date=seq.Date(from=min(Date,na.rm=T),to=max(Date,na.rm=T),by="1 day")) %>% 
-      tidyr::fill(Value,.direction = "down")
-  
-    df_predict_NASDAQCOM = df_yield_checkboard %>% 
-      filter(series_id!=joined_series) %>% 
-      dplyr::mutate(one_year_ahead=date+years(1)) %>% 
-      left_join(df_STOCKS_NASDAQCOM,by=c("one_year_ahead"="Date")) %>% 
-      unite(series_id,series_id,joined_series) %>% 
-      dplyr::select(date,series_id,spread,Value) %>% 
-      spread(series_id,spread)
     
-    fit_NASDAQCOM = caret::train(x = df_predict_NASDAQCOM %>% 
-                                  na.omit %>% 
-                                  dplyr::select(-date,-Value) %>% 
-                                  data.frame(),
-                             y = df_predict_NASDAQCOM %>% 
-                               na.omit %>% 
-                               .[["Value"]],
-                             method = "rf",
-                             tuneGrid=tune_grid,
-                             ntree=num_trees,
-                             metric = "RMSE",
-                             trControl=train_control)
+    return(df_predicted)
+}
+
+```
+
+```{r echo=FALSE}
+
+    df_STOCKS_SP500 = predict_by_yields(data = df_gspc)
+    df_STOCKS_NASDAQCOM = predict_by_yields(data = df_NASDAQ)
+    df_STOCKS_C25 = predict_by_yields(data = df_C25)
+    df_STOCKS_BTCUSD = predict_by_yields(data = df_BTCUSD)
+    df_STOCKS_ENERGY = predict_by_yields(data = df_iShares_SP500_ENERGY)
+    df_STOCKS_DISCRETIONARIES = predict_by_yields(data = df_iShares_SP500_CDISCRETIONARIES)
+    df_STOCKS_FINANCIALS = predict_by_yields(data = df_iShares_SP500_FINANCIALS)
+    df_STOCKS_COMMUNICATION = predict_by_yields(data = df_iShares_SP500_COMMUNICATION)
+    df_STOCKS_HEALTHCARE = predict_by_yields(data = df_iShares_SP500_HEALTHCARE)
+    df_STOCKS_SMALLCAP = predict_by_yields(data = df_iShares_SP500_SMALLCAP)
+    df_STOCKS_TECHNOLOGY = predict_by_yields(data = df_iShares_SP500_TECHNOLOGY)
+    df_STOCKS_GOLD = predict_by_yields(data = df_GOLD)
+    df_STOCKS_OIL = predict_by_yields(data = df_OIL)
     
-  df_predict_NASDAQCOM =
-    df_predict_NASDAQCOM %>% 
-    dplyr::mutate(pred_NASDAQCOM=predict(fit_NASDAQCOM,.)) %>% 
-    dplyr::select(date,pred_NASDAQCOM,Value) %>%
-    dplyr::mutate(date=date+years(1)) %>%
-    gather(pred,val,pred_NASDAQCOM:Value) %>%
-    tidyr::crossing(one_year=c(TRUE,FALSE)) %>% 
-    dplyr::mutate(date=ifelse(one_year,
-                              ifelse(date>=Sys.Date()-years(1),date,NA),date)) %>% 
-    filter(!is.na(date)) %>% 
-    dplyr::mutate(date=as.Date(date,origin="1970-01-01"))
+    
 ```
-
-```{r}
-
-# NASDAQ
-df_STOCKS_C25 = 
-    df_C25 %>% 
-    dplyr::select(Date,Value) %>%
-    tidyr::complete(Date=seq.Date(from=min(Date,na.rm=T),to=max(Date,na.rm=T),by="1 day")) %>% 
-    tidyr::fill(Value,.direction = "down")
-
-  df_predict_C25 = df_yield_checkboard %>% 
-    filter(series_id!=joined_series) %>% 
-    dplyr::mutate(one_year_ahead=date+years(1)) %>% 
-    left_join(df_STOCKS_C25,by=c("one_year_ahead"="Date")) %>% 
-    unite(series_id,series_id,joined_series) %>% 
-    dplyr::select(date,series_id,spread,Value) %>% 
-    spread(series_id,spread)
-
-fit_C25 = caret::train(x = df_predict_C25 %>% 
-                              na.omit %>% 
-                              dplyr::select(-date,-Value) %>% 
-                              data.frame(),
-                         y = df_predict_C25 %>% 
-                           na.omit %>% 
-                           .[["Value"]],
-                         method = "rf",
-                         tuneGrid=tune_grid,
-                         ntree=num_trees,
-                         metric = "RMSE",
-                         trControl=train_control)
-
-df_predict_C25 =
-  df_predict_C25 %>% 
-  dplyr::mutate(pred_C25=predict(fit_C25,.)) %>% 
-  dplyr::select(date,pred_C25,Value) %>%
-  dplyr::mutate(date=date+years(1)) %>%
-  gather(pred,val,pred_C25:Value) %>%
-  tidyr::crossing(one_year=c(TRUE,FALSE)) %>% 
-  dplyr::mutate(date=ifelse(one_year,
-                            ifelse(date>=Sys.Date()-years(1),date,NA),date)) %>% 
-  filter(!is.na(date)) %>% 
-  dplyr::mutate(date=as.Date(date,origin="1970-01-01"))
-```
-
-```{r}
-
-# NASDAQ
-df_STOCKS_BTCUSD = 
-    df_BTCUSD %>% 
-    dplyr::select(Date,Value) %>%
-    tidyr::complete(Date=seq.Date(from=min(Date,na.rm=T),to=max(Date,na.rm=T),by="1 day")) %>% 
-    tidyr::fill(Value,.direction = "down")
-
-  df_predict_BTCUSD = df_yield_checkboard %>% 
-    filter(series_id!=joined_series) %>% 
-    dplyr::mutate(one_year_ahead=date+years(1)) %>% 
-    left_join(df_STOCKS_BTCUSD,by=c("one_year_ahead"="Date")) %>% 
-    unite(series_id,series_id,joined_series) %>% 
-    dplyr::select(date,series_id,spread,Value) %>% 
-    spread(series_id,spread)
-
-fit_BTCUSD = caret::train(x = df_predict_BTCUSD %>% 
-                              na.omit %>% 
-                              dplyr::select(-date,-Value) %>% 
-                              data.frame(),
-                         y = df_predict_BTCUSD %>% 
-                           na.omit %>% 
-                           .[["Value"]],
-                         method = "rf",
-                         tuneGrid=tune_grid,
-                         ntree=num_trees,
-                         metric = "RMSE",
-                         trControl=train_control)
-
-df_predict_BTCUSD =
-  df_predict_BTCUSD %>% 
-  dplyr::mutate(pred_BTCUSD=predict(fit_BTCUSD,.)) %>% 
-  dplyr::select(date,pred_BTCUSD,Value) %>%
-  dplyr::mutate(date=date+years(1)) %>%
-  gather(pred,val,pred_BTCUSD:Value) %>%
-  tidyr::crossing(one_year=c(TRUE,FALSE)) %>% 
-  dplyr::mutate(date=ifelse(one_year,
-                            ifelse(date>=Sys.Date()-years(1),date,NA),date)) %>% 
-  filter(!is.na(date)) %>% 
-  dplyr::mutate(date=as.Date(date,origin="1970-01-01"))
-
-
-```
-
 
 # Summary
 
 ```{r}
+
+draw_charts = function(data) {
+  
+  ath = data %>% filter(pred=="Value") %>% pull(val) %>% max(na.rm=T)
+  atl = data %>% filter(pred=="Value") %>% pull(val) %>% min(na.rm=T)
+  p1 = data %>%
+        filter(!one_year) %>% 
+        # gather(pred,val,pred_glm) %>% 
+        ggplot(.,aes(x=date,y=val,color=pred)) +
+        geom_line() +
+        scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
+        scale_y_continuous(breaks = seq(0,1000000,100)) +
+        theme(axis.text.x=element_text(angle=45,hjust=1))  +
+        geom_vline(xintercept = Sys.Date(),linetype=2) +
+        add_fomc_meeting_dates() +
+        fit_draw_fibonacci(low = atl,high = ath) +
+        theme_i_like_the_stock(base_size = 20) +
+        labs(x=NULL,
+             y="(%)",
+             caption = timestamp_caption())
+  p2 = data %>%
+        filter(one_year) %>% 
+        # gather(pred,val,pred_glm) %>% 
+        ggplot(.,aes(x=date,y=val,color=pred)) +
+        geom_line() +
+        scale_x_date(date_breaks = "1 month",date_labels = "%b") +
+        scale_y_continuous(breaks = seq(0,1000000,100)) +
+        theme(axis.text.x=element_text(angle=45,hjust=1))  +
+        geom_vline(xintercept = Sys.Date(),linetype=2) +
+        add_fomc_meeting_dates() +
+        fit_draw_fibonacci(low = atl,high = ath) +
+        theme_i_like_the_stock(base_size = 20) +
+        labs(x=NULL,
+             y="(%)",
+             caption = timestamp_caption())
+  print( p1 )
+  print( p2 )
+  
+}
+
+```
+
+
+```{r eval=F}
 
 
 current_value = df_STOCKS_SP500 %>% filter(Sys.Date()-Date==min(Sys.Date()-Date)) %>% pull(Value)
 ath_value = max(df_STOCKS_SP500$Value)
 gap_to_ath = (current_value/ath_value)-1
 df_predict_SP500
+
 ```
 
 
 ## SP500
 
 ```{r fig.width = 15, fig.height = 15 }
-
-  df_predict_SP500 %>%
-  filter(!one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
-  scale_y_continuous(breaks = seq(0,5000,100)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="SP500 Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
+draw_charts(data = df_STOCKS_SP500)
 ```
-
-
-```{r fig.width = 15, fig.height = 15 }
-
-  df_predict_SP500 %>%
-  filter(one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 month",date_labels = "%b") +
-  scale_y_continuous(breaks = seq(0,5000,100)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="SP500 Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-```
-
 
 ## NASDAQ
 
 ```{r fig.width = 15, fig.height = 15 }
-
-df_predict_NASDAQCOM %>%  
-  filter(one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 month",date_labels = "%b") +
-  scale_y_continuous(breaks = seq(0,20000,1000)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="NASDAQ Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
+draw_charts(data = df_STOCKS_NASDAQCOM)
 ```
-
-```{r fig.width = 15, fig.height = 15 }
-
-df_predict_NASDAQCOM %>%  
-  filter(!one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
-  scale_y_continuous(breaks = seq(0,20000,1000)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="NASDAQ Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
-```
-
 
 ## C25
 
 ```{r fig.width = 15, fig.height = 15 }
-
-df_predict_C25 %>%  
-  filter(one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 month",date_labels = "%b") +
-  scale_y_continuous(breaks = seq(0,20000,50)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="C25 Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
+draw_charts(data = df_STOCKS_C25)
 ```
+
+## BTC-USD
 
 ```{r fig.width = 15, fig.height = 15 }
-
-df_predict_C25 %>%  
-  filter(!one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
-  scale_y_continuous(breaks = seq(0,20000,50)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="C25 Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
+draw_charts(data = df_STOCKS_BTCUSD)
 ```
 
-
-## BTC
+## ETF: Energy
 
 ```{r fig.width = 15, fig.height = 15 }
-
-df_predict_BTCUSD %>%  
-  filter(one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 month",date_labels = "%b") +
-  scale_y_continuous(breaks = seq(0,100000,2500)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="BTC Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
+draw_charts(data = df_STOCKS_ENERGY)
 ```
+
+## ETF: DISCRETIONARIES
 
 ```{r fig.width = 15, fig.height = 15 }
-
-df_predict_BTCUSD %>%  
-  filter(!one_year) %>% 
-  # gather(pred,val,pred_glm) %>% 
-  ggplot(.,aes(x=date,y=val,color=pred)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
-  scale_y_continuous(breaks = seq(0,100000,2500)) +
-  theme(axis.text.x=element_text(angle=45,hjust=1))  +
-  geom_vline(xintercept = Sys.Date(),linetype=2) +
-  add_fomc_meeting_dates() +
-  theme_i_like_the_stock(base_size = 20) +
-  labs(title="BTC Prediction",
-       x=NULL,
-       y="(%)",
-       caption = timestamp_caption())
-
-
+draw_charts(data = df_STOCKS_DISCRETIONARIES)
 ```
 
-# Index
+## ETF: FINANCIALS
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_FINANCIALS)
+```
+
+## ETF: COMMUNICATION
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_COMMUNICATION)
+```
+
+## ETF: HEALTHCARE
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_HEALTHCARE)
+```
+
+## ETF: SMALLCAP
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_SMALLCAP)
+```
+
+## ETF: TECHNOLOGY
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_TECHNOLOGY)
+```
+
+## GOLD
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_GOLD)
+```
+
+## OIL
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_OIL)
+```
+
+# Technical Analysis
 
 ## SP500
 
-```{r sp500_1, fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_gspc %>% 
   draw_chart(.) +
@@ -591,7 +451,7 @@ df_gspc %>%
 ```
 
 
-```{r sp500_2, fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_gspc %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
@@ -608,7 +468,7 @@ df_gspc %>%
 
 ## C25
 
-```{r c25_1, fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_C25 %>% 
   draw_chart(.) +
@@ -624,7 +484,7 @@ df_C25 %>%
 ```
 
 
-```{r c25_2, fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_C25 %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
@@ -644,7 +504,7 @@ df_C25 %>%
 
 ## BTC
 
-```{r btc_1, fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_BTCUSD %>% 
   draw_chart(.) +
@@ -657,7 +517,7 @@ df_BTCUSD %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r fig.height=15,fig.width=15}
 
 df_BTCUSD %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
