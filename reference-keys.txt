@@ -4,13 +4,6 @@ sp500
 nasdaq
 c25
 btc-usd
-etf-energy
-etf-discretionaries
-etf-financials
-etf-communication
-etf-healthcare
-etf-smallcap
-etf-technology
 gold
 oil
 technical-analysis
