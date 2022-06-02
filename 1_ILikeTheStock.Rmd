@@ -107,13 +107,6 @@ add_fomc_meeting_dates = function() {
 ```
 
 ```{r}
-draw_sma = function(values,data) {
-  print(data)
-  
-}
-```
-
-```{r}
 
 # Get Industry & Sector
 # https://www.nasdaq.com/market-activity/stocks/screener
@@ -284,13 +277,13 @@ predict_by_yields = function(data)  {
     df_STOCKS_NASDAQCOM = predict_by_yields(data = df_NASDAQ)
     df_STOCKS_C25 = predict_by_yields(data = df_C25)
     df_STOCKS_BTCUSD = predict_by_yields(data = df_BTCUSD)
-    df_STOCKS_ENERGY = predict_by_yields(data = df_iShares_SP500_ENERGY)
-    df_STOCKS_DISCRETIONARIES = predict_by_yields(data = df_iShares_SP500_CDISCRETIONARIES)
-    df_STOCKS_FINANCIALS = predict_by_yields(data = df_iShares_SP500_FINANCIALS)
-    df_STOCKS_COMMUNICATION = predict_by_yields(data = df_iShares_SP500_COMMUNICATION)
-    df_STOCKS_HEALTHCARE = predict_by_yields(data = df_iShares_SP500_HEALTHCARE)
-    df_STOCKS_SMALLCAP = predict_by_yields(data = df_iShares_SP500_SMALLCAP)
-    df_STOCKS_TECHNOLOGY = predict_by_yields(data = df_iShares_SP500_TECHNOLOGY)
+    # df_STOCKS_ENERGY = predict_by_yields(data = df_iShares_SP500_ENERGY)
+    # df_STOCKS_DISCRETIONARIES = predict_by_yields(data = df_iShares_SP500_CDISCRETIONARIES)
+    # df_STOCKS_FINANCIALS = predict_by_yields(data = df_iShares_SP500_FINANCIALS)
+    # df_STOCKS_COMMUNICATION = predict_by_yields(data = df_iShares_SP500_COMMUNICATION)
+    # df_STOCKS_HEALTHCARE = predict_by_yields(data = df_iShares_SP500_HEALTHCARE)
+    # df_STOCKS_SMALLCAP = predict_by_yields(data = df_iShares_SP500_SMALLCAP)
+    # df_STOCKS_TECHNOLOGY = predict_by_yields(data = df_iShares_SP500_TECHNOLOGY)
     df_STOCKS_GOLD = predict_by_yields(data = df_GOLD)
     df_STOCKS_OIL = predict_by_yields(data = df_OIL)
     
@@ -376,48 +369,6 @@ draw_charts(data = df_STOCKS_C25)
 
 ```{r fig.width = 15, fig.height = 15 }
 draw_charts(data = df_STOCKS_BTCUSD)
-```
-
-## ETF: Energy
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_ENERGY)
-```
-
-## ETF: DISCRETIONARIES
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_DISCRETIONARIES)
-```
-
-## ETF: FINANCIALS
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_FINANCIALS)
-```
-
-## ETF: COMMUNICATION
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_COMMUNICATION)
-```
-
-## ETF: HEALTHCARE
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_HEALTHCARE)
-```
-
-## ETF: SMALLCAP
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_SMALLCAP)
-```
-
-## ETF: TECHNOLOGY
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_TECHNOLOGY)
 ```
 
 ## GOLD
