@@ -23,7 +23,7 @@
 <meta name="author" content="Christian Kruse" />
 
 
-<meta name="date" content="2022-06-15" />
+<meta name="date" content="2022-06-16" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -200,43 +200,43 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="sector-rotations" class="section level2 hasAnchor" number="6.4">
 <h2><span class="header-section-number">6.4</span> Sector Rotations<a href="sectors-industries.html#sector-rotations" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p><img src="_main_files/figure-html/unnamed-chunk-35-1.svg" width="1920" /></p>
-<pre><code>## # A tibble: 112 × 5
+<pre><code>## # A tibble: 118 × 5
 ## # Groups:   Sector [13]
 ##    Date       Sector               Growth Trend   Value
 ##    &lt;date&gt;     &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;   &lt;dbl&gt;
-##  1 2009-02-25 &quot;&quot;                 0.0166   Uptrend     1
-##  2 2014-04-22 &quot;&quot;                 0.000801 Uptrend     1
-##  3 2016-03-21 &quot;&quot;                 0.00993  Uptrend     1
-##  4 2018-10-30 &quot;&quot;                 0.00452  Uptrend     1
-##  5 2020-12-29 &quot;&quot;                 0.00552  Uptrend     1
-##  6 2009-03-05 &quot;Basic Industries&quot; 0.00782  Uptrend     1
-##  7 2016-03-01 &quot;Basic Industries&quot; 0.0287   Uptrend     1
-##  8 2020-05-08 &quot;Basic Industries&quot; 0.00226  Uptrend     1
-##  9 2022-04-22 &quot;Basic Industries&quot; 0.00373  Uptrend     1
-## 10 2009-07-15 &quot;Capital Goods&quot;    0.00157  Uptrend     1
-## # … with 102 more rows</code></pre>
+##  1 2009-04-14 &quot;&quot;                 0.00259  Uptrend     1
+##  2 2014-04-14 &quot;&quot;                 0.00295  Uptrend     1
+##  3 2016-03-28 &quot;&quot;                 0.00507  Uptrend     1
+##  4 2018-10-09 &quot;&quot;                 0.000474 Uptrend     1
+##  5 2020-12-08 &quot;&quot;                 0.00185  Uptrend     1
+##  6 2009-03-02 &quot;Basic Industries&quot; 0.0168   Uptrend     1
+##  7 2016-02-26 &quot;Basic Industries&quot; 0.00594  Uptrend     1
+##  8 2017-08-28 &quot;Basic Industries&quot; 0.000259 Uptrend     1
+##  9 2020-06-05 &quot;Basic Industries&quot; 0.00113  Uptrend     1
+## 10 2022-02-11 &quot;Basic Industries&quot; 0.0123   Uptrend     1
+## # … with 108 more rows</code></pre>
 <pre><code>## # A tibble: 13 × 6
 ## # Groups:   Sector [13]
 ##    Date       Sector                     Growth Trend     Value Days_Since_Flip
 ##    &lt;date&gt;     &lt;chr&gt;                       &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;           &lt;dbl&gt;
-##  1 2019-11-29 &quot;Consumer Non-Durables&quot; -0.00131  Downtrend     1             929
-##  2 2020-10-08 &quot;Consumer Services&quot;     -0.00192  Downtrend     1             615
-##  3 2021-01-29 &quot;Miscellaneous&quot;         -0.000655 Downtrend     1             502
-##  4 2021-04-26 &quot;Transportation&quot;        -0.00386  Downtrend     1             415
-##  5 2021-05-11 &quot;Consumer Durables&quot;     -0.00235  Downtrend     1             400
-##  6 2022-01-12 &quot;Finance&quot;               -0.00999  Downtrend     1             154
-##  7 2022-03-01 &quot;Technology&quot;            -0.000325 Downtrend     1             106
-##  8 2022-03-15 &quot;Capital Goods&quot;         -0.000505 Downtrend     1              92
-##  9 2020-12-29 &quot;&quot;                       0.00552  Uptrend       1             533
-## 10 2021-02-10 &quot;Energy&quot;                 0.0195   Uptrend       1             490
-## 11 2021-09-23 &quot;Health Care&quot;            0.00174  Uptrend       1             265
-## 12 2021-12-21 &quot;Public Utilities&quot;       0.00626  Uptrend       1             176
-## 13 2022-04-22 &quot;Basic Industries&quot;       0.00373  Uptrend       1              54</code></pre>
+##  1 2019-11-13 &quot;Consumer Non-Durables&quot; -0.00389  Downtrend     1             946
+##  2 2020-10-14 &quot;Consumer Services&quot;     -0.000242 Downtrend     1             610
+##  3 2021-01-13 &quot;Miscellaneous&quot;         -0.00368  Downtrend     1             519
+##  4 2021-04-05 &quot;Transportation&quot;        -0.00524  Downtrend     1             437
+##  5 2021-06-01 &quot;Consumer Durables&quot;     -0.0310   Downtrend     1             380
+##  6 2021-12-14 &quot;Capital Goods&quot;         -0.00488  Downtrend     1             184
+##  7 2022-01-13 &quot;Finance&quot;               -0.000588 Downtrend     1             154
+##  8 2022-03-07 &quot;Technology&quot;            -0.0103   Downtrend     1             101
+##  9 2020-12-08 &quot;&quot;                       0.00185  Uptrend       1             555
+## 10 2021-02-10 &quot;Energy&quot;                 0.0150   Uptrend       1             491
+## 11 2021-09-22 &quot;Health Care&quot;            0.0110   Uptrend       1             267
+## 12 2021-12-21 &quot;Public Utilities&quot;       0.0188   Uptrend       1             177
+## 13 2022-02-11 &quot;Basic Industries&quot;       0.0123   Uptrend       1             125</code></pre>
 <pre><code>## # A tibble: 13 × 2
 ##    Sector                     n_
 ##    &lt;chr&gt;                   &lt;int&gt;
 ##  1 &quot;&quot;                         10
-##  2 &quot;Basic Industries&quot;          8
+##  2 &quot;Basic Industries&quot;         10
 ##  3 &quot;Capital Goods&quot;             9
 ##  4 &quot;Consumer Durables&quot;         8
 ##  5 &quot;Consumer Non-Durables&quot;     8
@@ -244,27 +244,27 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##  7 &quot;Energy&quot;                   10
 ##  8 &quot;Finance&quot;                  12
 ##  9 &quot;Health Care&quot;              11
-## 10 &quot;Miscellaneous&quot;             6
-## 11 &quot;Public Utilities&quot;          7
+## 10 &quot;Miscellaneous&quot;             8
+## 11 &quot;Public Utilities&quot;          9
 ## 12 &quot;Technology&quot;                7
 ## 13 &quot;Transportation&quot;            8</code></pre>
 <p><img src="_main_files/figure-html/unnamed-chunk-40-1.svg" width="1920" /></p>
 <pre><code>## # A tibble: 13 × 2
 ##    Sector                    sd_
 ##    &lt;chr&gt;                   &lt;dbl&gt;
-##  1 &quot;&quot;                       330.
-##  2 &quot;Basic Industries&quot;       513.
-##  3 &quot;Capital Goods&quot;          164.
-##  4 &quot;Consumer Durables&quot;      595.
-##  5 &quot;Consumer Non-Durables&quot;  281.
-##  6 &quot;Consumer Services&quot;      577.
-##  7 &quot;Energy&quot;                 305.
+##  1 &quot;&quot;                       297.
+##  2 &quot;Basic Industries&quot;       518.
+##  3 &quot;Capital Goods&quot;          155.
+##  4 &quot;Consumer Durables&quot;      587.
+##  5 &quot;Consumer Non-Durables&quot;  286.
+##  6 &quot;Consumer Services&quot;      493.
+##  7 &quot;Energy&quot;                 292.
 ##  8 &quot;Finance&quot;                194.
-##  9 &quot;Health Care&quot;            262.
-## 10 &quot;Miscellaneous&quot;         1059.
-## 11 &quot;Public Utilities&quot;       884.
-## 12 &quot;Technology&quot;            1132.
-## 13 &quot;Transportation&quot;         400.</code></pre>
+##  9 &quot;Health Care&quot;            241.
+## 10 &quot;Miscellaneous&quot;          804.
+## 11 &quot;Public Utilities&quot;       599.
+## 12 &quot;Technology&quot;            1101.
+## 13 &quot;Transportation&quot;         461.</code></pre>
 <p><img src="_main_files/figure-html/unnamed-chunk-42-1.svg" width="1920" /></p>
 <p><img src="_main_files/figure-html/unnamed-chunk-43-1.svg" width="1920" /></p>
 <div id="elo-approach" class="section level3 hasAnchor" number="6.4.1">
