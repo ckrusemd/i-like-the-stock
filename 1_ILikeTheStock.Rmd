@@ -328,8 +328,43 @@ draw_charts = function(data) {
         labs(x=NULL,
              y="(%)",
              caption = timestamp_caption())
+  
+  p3 = data %>% 
+    filter(pred=="pred_value") %>% 
+    filter(!one_year) %>% 
+    filter(date>=Sys.Date()) %>% 
+    filter(date<=Sys.Date()+days(14)) %>% 
+    dplyr::mutate(value_chg=val/lag(val)-1) %>% 
+    # dplyr::mutate(date=factor(date)) %>% 
+    ggplot(.,aes(x=one_year,y=date,fill=value_chg)) +
+    geom_tile() +
+    geom_text(aes(label=paste0(scales::number(val,accuracy = 1)," (",scales::percent(value_chg,accuracy = 0.1),")")),color="white") +
+    scale_y_date(date_breaks = "1 day",date_labels = "%a %d %b") +
+    theme_i_like_the_stock(base_size = 20) 
+  
+  p4 = data %>% 
+    filter(pred=="pred_value") %>% 
+    filter(!one_year) %>% 
+    filter(date>=Sys.Date()) %>% 
+    dplyr::mutate(value_chg=val/first(val)-1) %>% 
+    ggplot(.,aes(x=date,y=value_chg,color=pred)) +
+    geom_line() +
+    scale_x_date(date_breaks = "1 month",date_labels = "%b") +
+    scale_y_continuous(labels = scales::percent) +
+    theme(axis.text.x=element_text(angle=45,hjust=1))  +
+    geom_vline(xintercept = Sys.Date(),linetype=2) +
+    add_fomc_meeting_dates() +
+    # fit_draw_fibonacci(low = atl,high = ath) +
+    theme_i_like_the_stock(base_size = 20) +
+    labs(x=NULL,
+         y="(%)",
+         caption = timestamp_caption())
+    
+  
   print( p1 )
   print( p2 )
+  print( p3 )
+  print( p4 )
   
 }
 
@@ -484,7 +519,7 @@ df_BTCUSD %>%
 
 # Stocks
 
-```{r}
+```{r eval=F}
 
 metrics <- yahooQF(c("Name",
                      "Currency",
@@ -517,7 +552,7 @@ df_quotes = df_quotes %>%
 ```
 
 
-```{r}
+```{r eval=F}
 
 tickers_filtered = df_quotes %>% 
   group_by(Sector) %>%
@@ -555,7 +590,7 @@ tickers_filtered = df_quotes %>%
 
 ## Sectors
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
 df_quotes %>% 
   group_by(Sector) %>% 
@@ -575,7 +610,7 @@ df_quotes %>%
 
 ## Industries
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
 df_quotes %>% 
   group_by(Industry) %>% 
@@ -597,7 +632,7 @@ df_quotes %>%
 
 ## Biggest Caps by Sector
 
-```{r fig.height=60,fig.width=20}
+```{r eval=F}
 
 df_quotes %>% 
   group_by(Sector) %>% 
@@ -621,7 +656,7 @@ df_quotes %>%
 ## Sector Rotations
 
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
   stock_data %>% 
   group_by(Symbol) %>% 
@@ -643,7 +678,7 @@ df_quotes %>%
 
 ```
 
-```{r}
+```{r eval=F}
 
 loess_adjust = function(data) {
   # fit_smooth =  smooth.spline(x = data$Date,
@@ -672,7 +707,7 @@ loess_adjust = function(data) {
 ```
 
 
-```{r}
+```{r eval=F}
 df_gamed = stock_data %>% 
   dplyr::mutate(six_months_ago=Date-months(6)) %>% 
   inner_join( stock_data , by=c("six_months_ago"="Date","Symbol"="Symbol") ) %>% 
@@ -697,7 +732,7 @@ df_rotation_dates = df_gamed %>%
 df_rotation_dates
 ```
 
-```{r}
+```{r eval=F}
 
 df_gamed %>% 
   dplyr::mutate(Uptrend=ifelse(Growth>0 & lag(Growth)<0,1,0),
@@ -710,14 +745,14 @@ df_gamed %>%
   arrange(Trend,desc(Days_Since_Flip))
 ```
 
-```{r}
+```{r eval=F}
 df_rotation_dates %>% 
   arrange(Sector,desc(Date)) %>% 
   dplyr::mutate(Days_Since_Last=as.numeric(Date-lead(Date))) %>% 
   dplyr::summarise(n_=n())
 ```
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
 df_trend_shifts = 
   df_gamed %>% 
@@ -750,7 +785,7 @@ df_gamed %>%
 
 ```
 
-```{r}
+```{r eval=F}
 df_rotation_dates %>% 
   arrange(Sector,desc(Date)) %>% 
   dplyr::mutate(Days_Since_Last=as.numeric(Date-lead(Date))) %>% 
@@ -758,7 +793,7 @@ df_rotation_dates %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 df_gamed %>% 
   # filter(Sector=="Basic Industries") %>% 
   # filter(Industry %in% c("Internet and Information Services","Oil & Gas Production")) %>% 
@@ -771,7 +806,7 @@ df_gamed %>%
   geom_hline(yintercept = 0,linetype=2)
 ```
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
 df_gamed %>% 
   dplyr::mutate(six_months_ago=Date-months(6)) %>% 
@@ -789,7 +824,7 @@ df_gamed %>%
 
 ### Elo approach
 
-```{r fig.height=20,fig.width=20}
+```{r eval=F}
 
 df_elo = stock_data %>% 
   inner_join( df_quotes ) %>% 
@@ -929,5 +964,4 @@ df_nordnet_etf_pareto %>%
   scale_y_continuous(labels = scales::percent) +
   geom_text(aes(label=name),size=2,vjust=-2)
 ```
-
 
