@@ -23,7 +23,7 @@
 <meta name="author" content="Christian Kruse" />
 
 
-<meta name="date" content="2022-10-03" />
+<meta name="date" content="2022-10-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -187,89 +187,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1><span class="header-section-number">6</span> Sectors &amp; Industries<a href="sectors-industries.html#sectors-industries" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="sectors" class="section level2 hasAnchor" number="6.1">
 <h2><span class="header-section-number">6.1</span> Sectors<a href="sectors-industries.html#sectors" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><img src="_main_files/figure-html/unnamed-chunk-32-1.svg" width="1920" /></p>
 </div>
 <div id="industries" class="section level2 hasAnchor" number="6.2">
 <h2><span class="header-section-number">6.2</span> Industries<a href="sectors-industries.html#industries" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><img src="_main_files/figure-html/unnamed-chunk-33-1.svg" width="1920" /></p>
 </div>
 <div id="biggest-caps-by-sector" class="section level2 hasAnchor" number="6.3">
 <h2><span class="header-section-number">6.3</span> Biggest Caps by Sector<a href="sectors-industries.html#biggest-caps-by-sector" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><img src="_main_files/figure-html/unnamed-chunk-34-1.svg" width="1920" /></p>
 </div>
 <div id="sector-rotations" class="section level2 hasAnchor" number="6.4">
 <h2><span class="header-section-number">6.4</span> Sector Rotations<a href="sectors-industries.html#sector-rotations" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><img src="_main_files/figure-html/unnamed-chunk-35-1.svg" width="1920" /></p>
-<pre><code>## # A tibble: 114 × 5
-## # Groups:   Sector [13]
-##    Date       Sector               Growth Trend   Value
-##    &lt;date&gt;     &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;   &lt;dbl&gt;
-##  1 2009-02-25 &quot;&quot;                 0.0174   Uptrend     1
-##  2 2014-03-19 &quot;&quot;                 0.00209  Uptrend     1
-##  3 2016-03-28 &quot;&quot;                 0.00840  Uptrend     1
-##  4 2018-09-05 &quot;&quot;                 0.00306  Uptrend     1
-##  5 2021-01-15 &quot;&quot;                 0.00248  Uptrend     1
-##  6 2009-02-25 &quot;Basic Industries&quot; 0.0269   Uptrend     1
-##  7 2016-02-10 &quot;Basic Industries&quot; 0.00955  Uptrend     1
-##  8 2020-05-04 &quot;Basic Industries&quot; 0.00866  Uptrend     1
-##  9 2022-06-07 &quot;Basic Industries&quot; 0.000624 Uptrend     1
-## 10 2009-11-13 &quot;Capital Goods&quot;    0.00191  Uptrend     1
-## # … with 104 more rows</code></pre>
-<pre><code>## # A tibble: 13 × 6
-## # Groups:   Sector [13]
-##    Date       Sector                     Growth Trend     Value Days_Since_Flip
-##    &lt;date&gt;     &lt;chr&gt;                       &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;           &lt;dbl&gt;
-##  1 2019-10-24 &quot;Consumer Non-Durables&quot; -0.00126  Downtrend     1            1075
-##  2 2020-10-06 &quot;Consumer Services&quot;     -0.00351  Downtrend     1             727
-##  3 2021-03-29 &quot;Transportation&quot;        -0.00516  Downtrend     1             553
-##  4 2021-05-24 &quot;Consumer Durables&quot;     -0.0164   Downtrend     1             497
-##  5 2022-02-02 &quot;Capital Goods&quot;         -0.00130  Downtrend     1             243
-##  6 2022-02-23 &quot;Finance&quot;               -0.0133   Downtrend     1             222
-##  7 2022-03-15 &quot;Technology&quot;            -0.00273  Downtrend     1             202
-##  8 2022-09-14 &quot;&quot;                      -0.0119   Downtrend     1              19
-##  9 2021-02-04 &quot;Energy&quot;                 0.00373  Uptrend       1             606
-## 10 2021-10-12 &quot;Health Care&quot;            0.0138   Uptrend       1             356
-## 11 2021-12-01 &quot;Public Utilities&quot;       0.00699  Uptrend       1             306
-## 12 2022-06-07 &quot;Basic Industries&quot;       0.000624 Uptrend       1             118
-## 13 2022-08-22 &quot;Miscellaneous&quot;          0.0156   Uptrend       1              42</code></pre>
-<pre><code>## # A tibble: 13 × 2
-##    Sector                     n_
-##    &lt;chr&gt;                   &lt;int&gt;
-##  1 &quot;&quot;                         11
-##  2 &quot;Basic Industries&quot;          8
-##  3 &quot;Capital Goods&quot;             9
-##  4 &quot;Consumer Durables&quot;         6
-##  5 &quot;Consumer Non-Durables&quot;     8
-##  6 &quot;Consumer Services&quot;         6
-##  7 &quot;Energy&quot;                   10
-##  8 &quot;Finance&quot;                  12
-##  9 &quot;Health Care&quot;              11
-## 10 &quot;Miscellaneous&quot;             9
-## 11 &quot;Public Utilities&quot;          9
-## 12 &quot;Technology&quot;                7
-## 13 &quot;Transportation&quot;            8</code></pre>
-<p><img src="_main_files/figure-html/unnamed-chunk-40-1.svg" width="1920" /></p>
-<pre><code>## # A tibble: 13 × 2
-##    Sector                    sd_
-##    &lt;chr&gt;                   &lt;dbl&gt;
-##  1 &quot;&quot;                       259.
-##  2 &quot;Basic Industries&quot;       528.
-##  3 &quot;Capital Goods&quot;          152.
-##  4 &quot;Consumer Durables&quot;      632.
-##  5 &quot;Consumer Non-Durables&quot;  293.
-##  6 &quot;Consumer Services&quot;      717.
-##  7 &quot;Energy&quot;                 305.
-##  8 &quot;Finance&quot;                201.
-##  9 &quot;Health Care&quot;            239.
-## 10 &quot;Miscellaneous&quot;          753.
-## 11 &quot;Public Utilities&quot;       530.
-## 12 &quot;Technology&quot;            1115.
-## 13 &quot;Transportation&quot;         446.</code></pre>
-<p><img src="_main_files/figure-html/unnamed-chunk-42-1.svg" width="1920" /></p>
-<p><img src="_main_files/figure-html/unnamed-chunk-43-1.svg" width="1920" /></p>
 <div id="elo-approach" class="section level3 hasAnchor" number="6.4.1">
 <h3><span class="header-section-number">6.4.1</span> Elo approach<a href="sectors-industries.html#elo-approach" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p><img src="_main_files/figure-html/unnamed-chunk-44-1.svg" width="1920" /><img src="_main_files/figure-html/unnamed-chunk-44-2.svg" width="1920" /></p>
 </div>
 </div>
 </div>
