@@ -158,6 +158,9 @@ df_NASDAQ = query_yahoo(ticker = "^IXIC")
 
 df_GOLD = query_yahoo(ticker = "GC=F") 
 df_OIL = query_yahoo(ticker = "CL=F") 
+df_TLT = query_yahoo(ticker = "TLT") 
+df_DXY = query_yahoo(ticker = "DX-Y.NYB") 
+df_VIX = query_yahoo(ticker = "^VIX") 
 
 
 ```
@@ -286,7 +289,9 @@ predict_by_yields = function(data)  {
     # df_STOCKS_TECHNOLOGY = predict_by_yields(data = df_iShares_SP500_TECHNOLOGY)
     df_STOCKS_GOLD = predict_by_yields(data = df_GOLD)
     df_STOCKS_OIL = predict_by_yields(data = df_OIL)
-    
+    df_STOCKS_TLT = predict_by_yields(data = df_TLT)
+    df_STOCKS_DXY = predict_by_yields(data = df_DXT)
+    df_STOCKS_VIX = predict_by_yields(data = df_VIX)
     
 ```
 
@@ -416,6 +421,24 @@ draw_charts(data = df_STOCKS_GOLD)
 
 ```{r fig.width = 15, fig.height = 15 }
 draw_charts(data = df_STOCKS_OIL)
+```
+
+## TLT
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_TLT)
+```
+
+## DXY
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_DXY)
+```
+
+## VIX
+
+```{r fig.width = 15, fig.height = 15 }
+draw_charts(data = df_STOCKS_VIX)
 ```
 
 # Technical Analysis
