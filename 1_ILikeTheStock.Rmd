@@ -6,7 +6,7 @@ output: html_document
 ```{r}
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,dev = "svg")
 install.packages('quantmod',repos = "http://cran.us.r-project.org")
-  pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret,tidyquant,fredr)
+  pacman::p_load(bookdown,PlayerRatings,rvest,dplyr,tidyr,RCurl,rPref,readr,DT,bookdown,XML,lubridate,data.table,openxlsx,stringr,quantmod,ggplot2,TTR,rPref,igraph,scales,DBI,RSQLite,XML,RCurl,stringr,httr,openxlsx,progress,glue,caret,tidyquant,fredr,logger)
 
 options(scipen=999)
 options(warn=-1)
@@ -104,7 +104,10 @@ add_fomc_meeting_dates = function() {
                             ymd("2023-03-15"),
                             ymd("2023-05-03"),
                             ymd("2023-06-14"),
-                            ymd("2023-07-26")),linetype=2,color="#eb493a")
+                            ymd("2023-07-26"),
+                            ymd("2023-09-20"),
+                            ymd("2023-11-01"),
+                            ymd("2023-12-13")),linetype=2,color="#eb493a")
 }
 ```
 
@@ -135,8 +138,8 @@ df_stocks = stockSymbols() %>%
 ```
 
 ```{r echo=FALSE}
-num_trees=1000
-tune_grid=data.frame(mtry=c(1,2,3,5))
+num_trees=100
+tune_grid=data.frame(mtry=c(15))
 train_control = caret::trainControl(method = "repeatedcv",number = 5,repeats = 5)
 ```
 
@@ -146,17 +149,6 @@ df_gspc = query_yahoo(ticker = "^GSPC")
 df_C25 = query_yahoo(ticker = "^OMXC25") 
 df_BTCUSD = query_yahoo(ticker = "BTC-USD") 
 df_NASDAQ = query_yahoo(ticker = "^IXIC") 
-
-
-# df_iShares_STOXX_REALESTATE = query_yahoo(ticker = "EXI5.DE") 
-
-# df_iShares_SP500_ENERGY = query_yahoo(ticker = "QDVF.DE") 
-# df_iShares_SP500_CDISCRETIONARIES = query_yahoo(ticker = "QDVK.DE") 
-# df_iShares_SP500_FINANCIALS = query_yahoo(ticker = "QDVH.DE") 
-# df_iShares_SP500_COMMUNICATION = query_yahoo(ticker = "IU5C.DE") 
-# df_iShares_SP500_HEALTHCARE = query_yahoo(ticker = "QDVG.DE") 
-# df_iShares_SP500_SMALLCAP = query_yahoo(ticker = "IUS3.DE") 
-# df_iShares_SP500_TECHNOLOGY = query_yahoo(ticker = "QDVE.DE") 
 
 df_EURUSD = query_yahoo(ticker = "EURUSD=X") 
 df_EURAED = query_yahoo(ticker = "EURAED=X") 
@@ -170,6 +162,17 @@ df_OIL = query_yahoo(ticker = "CL=F")
 df_TLT = query_yahoo(ticker = "TLT") 
 df_DXY = query_yahoo(ticker = "DX-Y.NYB") 
 df_VIX = query_yahoo(ticker = "^VIX") 
+
+
+# df_iShares_STOXX_REALESTATE = query_yahoo(ticker = "EXI5.DE") 
+
+# df_iShares_SP500_ENERGY = query_yahoo(ticker = "QDVF.DE") 
+# df_iShares_SP500_CDISCRETIONARIES = query_yahoo(ticker = "QDVK.DE") 
+# df_iShares_SP500_FINANCIALS = query_yahoo(ticker = "QDVH.DE") 
+# df_iShares_SP500_COMMUNICATION = query_yahoo(ticker = "IU5C.DE") 
+# df_iShares_SP500_HEALTHCARE = query_yahoo(ticker = "QDVG.DE") 
+# df_iShares_SP500_SMALLCAP = query_yahoo(ticker = "IUS3.DE") 
+# df_iShares_SP500_TECHNOLOGY = query_yahoo(ticker = "QDVE.DE") 
 
 
 ```
@@ -253,11 +256,76 @@ predict_by_yields = function(data)  {
       dplyr::select(date,series_id,spread,Value) %>% 
       spread(series_id,spread)
     
-    fit_rf = caret::train(x = df_predicting %>% 
+    df_predicting_1 = df_yield_checkboard %>% 
+      filter(series_id!=joined_series) %>% 
+      dplyr::mutate(one_year_ahead=date+months(1)) %>% 
+      left_join(df_values,by=c("one_year_ahead"="Date")) %>% 
+      unite(series_id,series_id,joined_series) %>% 
+      dplyr::select(date,series_id,spread,Value) %>% 
+      spread(series_id,spread)
+    df_predicting_3 = df_yield_checkboard %>% 
+      filter(series_id!=joined_series) %>% 
+      dplyr::mutate(one_year_ahead=date+months(3)) %>% 
+      left_join(df_values,by=c("one_year_ahead"="Date")) %>% 
+      unite(series_id,series_id,joined_series) %>% 
+      dplyr::select(date,series_id,spread,Value) %>% 
+      spread(series_id,spread)
+    df_predicting_6 = df_yield_checkboard %>% 
+      filter(series_id!=joined_series) %>% 
+      dplyr::mutate(one_year_ahead=date+months(6)) %>% 
+      left_join(df_values,by=c("one_year_ahead"="Date")) %>% 
+      unite(series_id,series_id,joined_series) %>% 
+      dplyr::select(date,series_id,spread,Value) %>% 
+      spread(series_id,spread)
+    df_predicting_12 = df_yield_checkboard %>% 
+      filter(series_id!=joined_series) %>% 
+      dplyr::mutate(one_year_ahead=date+months(12)) %>% 
+      left_join(df_values,by=c("one_year_ahead"="Date")) %>% 
+      unite(series_id,series_id,joined_series) %>% 
+      dplyr::select(date,series_id,spread,Value) %>% 
+      spread(series_id,spread)
+    
+    fit_rf_1 = caret::train(x = df_predicting_1 %>% 
                                   na.omit %>% 
                                   dplyr::select(-date,-Value) %>% 
                                   data.frame(),
-                             y = df_predicting %>% 
+                             y = df_predicting_1 %>% 
+                               na.omit %>% 
+                               .[["Value"]],
+                             method = "rf",
+                             tuneGrid=tune_grid,
+                             ntree=num_trees,
+                             metric = "RMSE",
+                             trControl=train_control)
+    fit_rf_3 = caret::train(x = df_predicting_3 %>% 
+                                  na.omit %>% 
+                                  dplyr::select(-date,-Value) %>% 
+                                  data.frame(),
+                             y = df_predicting_3 %>% 
+                               na.omit %>% 
+                               .[["Value"]],
+                             method = "rf",
+                             tuneGrid=tune_grid,
+                             ntree=num_trees,
+                             metric = "RMSE",
+                             trControl=train_control)
+    fit_rf_6 = caret::train(x = df_predicting_6 %>% 
+                                  na.omit %>% 
+                                  dplyr::select(-date,-Value) %>% 
+                                  data.frame(),
+                             y = df_predicting_6 %>% 
+                               na.omit %>% 
+                               .[["Value"]],
+                             method = "rf",
+                             tuneGrid=tune_grid,
+                             ntree=num_trees,
+                             metric = "RMSE",
+                             trControl=train_control)
+    fit_rf_12 = caret::train(x = df_predicting_12 %>% 
+                                  na.omit %>% 
+                                  dplyr::select(-date,-Value) %>% 
+                                  data.frame(),
+                             y = df_predicting_12 %>% 
                                na.omit %>% 
                                .[["Value"]],
                              method = "rf",
@@ -268,10 +336,16 @@ predict_by_yields = function(data)  {
     
     df_predicted =
       df_predicting %>% 
-      dplyr::mutate(pred_value=predict(fit_rf,.)) %>% 
-      dplyr::select(date,pred_value,Value) %>%
-      dplyr::mutate(date=date+years(1)) %>%
-      gather(pred,val,pred_value:Value) %>%
+      dplyr::mutate(pred_value_1=predict(fit_rf_1,.),
+                    pred_value_3=predict(fit_rf_3,.),
+                    pred_value_6=predict(fit_rf_6,.),
+                    pred_value_12=predict(fit_rf_12,.)) %>% 
+      dplyr::select(date,pred_value_1,pred_value_3,pred_value_6,pred_value_12,Value) %>% 
+      gather(dates,val,pred_value_1 : pred_value_12) %>% 
+      separate(dates,into=c("pred","stop","change")) %>% 
+      unite(pred,pred,stop) %>% 
+      dplyr::mutate(date=date+months(as.numeric(change))) %>%
+      # gather(pred,val,pred_value:Value) %>%
       tidyr::crossing(one_year=c(TRUE,FALSE)) %>% 
       dplyr::mutate(date=ifelse(one_year,
                                 ifelse(date>=Sys.Date()-years(1),date,NA),date)) %>% 
@@ -302,10 +376,10 @@ predict_by_yields = function(data)  {
     df_STOCKS_DXY = predict_by_yields(data = df_DXY)
     df_STOCKS_VIX = predict_by_yields(data = df_VIX)
     df_STOCKS_EURUSD = predict_by_yields(data = df_EURUSD) 
-    df_STOCKS_EURAED = predict_by_yields(data = df_EURAED) 
-    df_STOCKS_USDDKK = predict_by_yields(data = df_USDDKK) 
-    df_STOCKS_JPYDKK = predict_by_yields(data = df_JPYDKK) 
-    df_STOCKS_CHFDKK = predict_by_yields(data = df_CHFDKK) 
+    # df_STOCKS_EURAED = predict_by_yields(data = df_EURAED) 
+    # df_STOCKS_USDDKK = predict_by_yields(data = df_USDDKK) 
+    # df_STOCKS_JPYDKK = predict_by_yields(data = df_JPYDKK) 
+    # df_STOCKS_CHFDKK = predict_by_yields(data = df_CHFDKK) 
     
 ```
 
@@ -320,7 +394,7 @@ draw_charts = function(data) {
   p1 = data %>%
         filter(!one_year) %>% 
         # gather(pred,val,pred_glm) %>% 
-        ggplot(.,aes(x=date,y=val,color=pred)) +
+        ggplot(.,aes(x=date,y=val,color=change,group=change)) +
         geom_line() +
         scale_x_date(date_breaks = "1 year",date_labels = "%Y") +
         scale_y_continuous(breaks = seq(0,1000000,100)) +
@@ -328,14 +402,14 @@ draw_charts = function(data) {
         geom_vline(xintercept = Sys.Date(),linetype=2) +
         add_fomc_meeting_dates() +
         fit_draw_fibonacci(low = atl,high = ath) +
-        theme_i_like_the_stock(base_size = 20) +
+        theme_i_like_the_stock(base_size = 12) +
         labs(x=NULL,
              y="(%)",
              caption = timestamp_caption())
   p2 = data %>%
         filter(one_year) %>% 
         # gather(pred,val,pred_glm) %>% 
-        ggplot(.,aes(x=date,y=val,color=pred)) +
+        ggplot(.,aes(x=date,y=val,color=change,group=change)) +
         geom_line() +
         scale_x_date(date_breaks = "1 month",date_labels = "%b") +
         scale_y_continuous(breaks = seq(0,1000000,100)) +
@@ -343,7 +417,7 @@ draw_charts = function(data) {
         geom_vline(xintercept = Sys.Date(),linetype=2) +
         add_fomc_meeting_dates() +
         fit_draw_fibonacci(low = atl,high = ath) +
-        theme_i_like_the_stock(base_size = 20) +
+        theme_i_like_the_stock(base_size = 12) +
         labs(x=NULL,
              y="(%)",
              caption = timestamp_caption())
@@ -355,18 +429,18 @@ draw_charts = function(data) {
     filter(date<=Sys.Date()+days(14)) %>% 
     dplyr::mutate(value_chg=val/lag(val)-1) %>% 
     # dplyr::mutate(date=factor(date)) %>% 
-    ggplot(.,aes(x=one_year,y=date,fill=value_chg)) +
+    ggplot(.,aes(x=change,y=date,fill=value_chg)) +
     geom_tile() +
     geom_text(aes(label=paste0(scales::number(val,accuracy = 1)," (",scales::percent(value_chg,accuracy = 0.1),")")),color="white") +
     scale_y_date(date_breaks = "1 day",date_labels = "%a %d %b") +
-    theme_i_like_the_stock(base_size = 20) 
+    theme_i_like_the_stock(base_size = 12)
   
   p4 = data %>% 
     filter(pred=="pred_value") %>% 
     filter(!one_year) %>% 
     filter(date>=Sys.Date()) %>% 
     dplyr::mutate(value_chg=val/first(val)-1) %>% 
-    ggplot(.,aes(x=date,y=value_chg,color=pred)) +
+    ggplot(.,aes(x=date,y=value_chg,color=change,group=change)) +
     geom_line() +
     scale_x_date(date_breaks = "1 month",date_labels = "%b") +
     scale_y_continuous(labels = scales::percent) +
@@ -374,7 +448,7 @@ draw_charts = function(data) {
     geom_vline(xintercept = Sys.Date(),linetype=2) +
     add_fomc_meeting_dates() +
     # fit_draw_fibonacci(low = atl,high = ath) +
-    theme_i_like_the_stock(base_size = 20) +
+    theme_i_like_the_stock(base_size = 12) +
     labs(x=NULL,
          y="(%)",
          caption = timestamp_caption())
@@ -403,85 +477,73 @@ df_predict_SP500
 
 ## SP500
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_SP500)
 ```
 
 ## NASDAQ
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_NASDAQCOM)
 ```
 
 ## C25
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_C25)
 ```
 
 ## BTC-USD
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_BTCUSD)
 ```
 
 ## GOLD
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_GOLD)
 ```
 
 ## OIL
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_OIL)
 ```
 
 ## TLT
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_TLT)
 ```
 
 ## DXY
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_DXY)
 ```
 
 ## VIX
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_VIX)
 ```
 
 ## EUR/USD
 
-```{r fig.width = 15, fig.height = 15 }
+```{r  }
 draw_charts(data = df_STOCKS_EURUSD)
-```
-
-## EUR/AED
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_EURAED)
-```
-
-## USD/DKK
-
-```{r fig.width = 15, fig.height = 15 }
-draw_charts(data = df_STOCKS_USDDKK)
 ```
 
 ## JPY/DKK
 
-```{r fig.width = 15, fig.height = 15 }
+```{r eval=F }
 draw_charts(data = df_STOCKS_JPYDKK)
 ```
 
 ## CHF/DKK
 
-```{r fig.width = 15, fig.height = 15 }
+```{r eval=F }
 draw_charts(data = df_STOCKS_CHFDKK)
 ```
 
@@ -558,7 +620,7 @@ df_C25 %>%
 
 ## BTC
 
-```{r fig.height=15,fig.width=15}
+```{r  }
 
 df_BTCUSD %>% 
   draw_chart(.) +
@@ -571,7 +633,7 @@ df_BTCUSD %>%
 ```
 
 
-```{r fig.height=20,fig.width=20}
+```{r  }
 
 df_BTCUSD %>% 
   filter(Date>=Sys.Date()-days(30)) %>% 
@@ -623,7 +685,7 @@ df_quotes = df_quotes %>%
 
 tickers_filtered = df_quotes %>% 
   group_by(Sector) %>%
-  top_n(n=15,wt=`Market Capitalization`) %>% 
+  top_n(n=10,wt=`Market Capitalization`) %>% 
   ungroup()
 
   symbols = unique(tickers_filtered$Symbol)
@@ -971,64 +1033,3 @@ df_elo_calculation_all_dates %>%
   geom_text(aes(label=Label),vjust=1,size=5)
 
 ```
-
-# ETF
-
-## Nordnet ETF'er
-
-```{r eval=F}
-df_nordnet_etf = rbindlist(lapply(seq(15),function(x) {
-  
-    source_url = paste0("https://www.nordnet.dk/markedet/etf-lister?sortField=yield_1y&sortOrder=descending&page=",x)
-    nordnet_etf =
-      xml2::read_html(source_url) %>%
-      html_node("#main-content > div > div.PageWrapper__Outer-sc-1ur2ylx-0.kpJmDN > div > div > div > div.Box__StyledDiv-sc-1bfv3i9-0.gBipNb > div") %>%
-        html_children() %>% 
-        lapply(.,function(x) {
-          
-          x %>% html_children()  %>% html_text() %>% unlist() %>% t %>% as.data.frame()
-          # data.frame(
-          #   name=  x %>% html_children() %>% html_children() %>% rvest::html_attr("value")
-          # )
-        }) %>% 
-        rbindlist(.) %>% 
-      tail(-1) %>% 
-      setNames(.,c("buy","name","type","gain_today","gain_1yr","aaop","morningstar","V1","sustain","belaaning","owners","V2")) %>% 
-      dplyr::mutate(gain_today=as.numeric(gsub("%","",gsub("\\,","\\.",gain_today)))/100) %>% 
-      dplyr::mutate(gain_1yr=as.numeric(gsub("%","",gsub("\\,","\\.",gain_1yr)))/100) %>% 
-      dplyr::mutate(aaop=as.numeric(gsub("%","",gsub("\\,","\\.",aaop)))/100) %>% 
-      dplyr::mutate(morningstar=gsub(" stars","",morningstar)) %>% 
-      dplyr::mutate(belaaning=as.numeric(gsub("%","",belaaning))/100) %>% 
-      dplyr::mutate(owners=as.numeric(gsub("\\.","",owners)))
-    
-    Sys.sleep(floor(runif(n = 1,min = 20,max = 30)))
-  
-  
-}))
-
-df_nordnet_etf_pareto = df_nordnet_etf %>% 
-  dplyr::mutate(name=gsub("Germany","",name)) %>% 
-  filter(!is.na(gain_1yr)) %>% 
-  filter(!is.na(aaop)) %>% 
-  psel(df = . , pref = high(gain_1yr) * low(aaop) , top = nrow(.)) %>% 
-  filter(.level<5) %>% 
-  dplyr::mutate(.level=factor(.level))
-
-df_nordnet_etf_pareto %>% 
-  ggplot(.,aes(x=aaop,y=gain_1yr,color=.level)) +
-  geom_point() +
-  geom_line() +
-  scale_x_continuous(labels = scales::percent) +
-  scale_y_continuous(labels = scales::percent) +
-  facet_wrap(~.level) +
-  geom_text(aes(label=name),size=2)
-
-
-
-df_nordnet_etf_pareto %>% 
-  ggplot(.,aes(x=.level,y=gain_1yr,size=aaop,color=.level)) +
-  geom_point() +
-  scale_y_continuous(labels = scales::percent) +
-  geom_text(aes(label=name),size=2,vjust=-2)
-```
-
