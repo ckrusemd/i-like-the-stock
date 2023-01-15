@@ -176,7 +176,7 @@ df_stocks = stockSymbols() %>%
 
 ```
 
-```{r settings echo=FALSE}
+```{r echo=FALSE}
 num_trees=100
 tune_grid=data.frame(mtry=c(15))
 train_control = caret::trainControl(method = "repeatedcv",number = 5,repeats = 5)
