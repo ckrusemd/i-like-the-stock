@@ -131,7 +131,7 @@ fit_draw_fibonacci = function(low,high) {
 }
 ```
 
-```{r addfomcdates}
+```{r }
 
 add_fomc_meeting_dates = function() {
   geom_vline(xintercept = c(ymd("2022-06-15"),
@@ -150,7 +150,7 @@ add_fomc_meeting_dates = function() {
 }
 ```
 
-```{r getsymbols}
+```{r }
 
 # Get Industry & Sector
 # https://www.nasdaq.com/market-activity/stocks/screener
@@ -182,7 +182,7 @@ tune_grid=data.frame(mtry=c(15))
 train_control = caret::trainControl(method = "repeatedcv",number = 5,repeats = 5)
 ```
 
-```{r tickers echo=FALSE}
+```{r echo=FALSE}
 
 df_gspc = query_yahoo(ticker = "^GSPC") 
 df_C25 = query_yahoo(ticker = "^OMXC25") 
@@ -216,7 +216,7 @@ df_VIX = query_yahoo(ticker = "^VIX")
 
 ```
 
-```{r yieldcurve echo=FALSE}
+```{r echo=FALSE}
 order_ = c("DFF",
             "DGS1MO",
             "DGS3MO",
@@ -396,7 +396,7 @@ predict_by_yields = function(data)  {
 
 ```
 
-```{r predictbyyields echo=FALSE}
+```{r echo=FALSE}
 
     df_STOCKS_SP500 = predict_by_yields(data = df_gspc)
     df_STOCKS_NASDAQCOM = predict_by_yields(data = df_NASDAQ)
