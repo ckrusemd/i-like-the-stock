@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r}
-
+install.packages("cli")
 if (!require(pacman)) { install.packages("pacman") }
 if (!require(quantmod)) { install.packages('quantmod',repos = "http://cran.us.r-project.org") }
 pacman::p_load(PlayerRatings,
