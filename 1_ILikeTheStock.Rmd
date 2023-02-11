@@ -159,7 +159,12 @@ sector_industry_file = file.info(list.files(path = "Data",pattern = "nasdaq_scre
 
 ```{r excel_nasdaq_screener_2}
 # Get all symbols
-df_stocks = stockSymbols() %>% 
+df_stocks = stockSymbols()
+```
+
+
+```{r excel_nasdaq_screener_3}
+df_stocks = df_stocks %>% 
   dplyr::select(Symbol,Name,Exchange,ETF) %>% 
   filter(Exchange %in% c("NASDAQ","NYSE")) %>% 
   group_by(Symbol) %>% 
