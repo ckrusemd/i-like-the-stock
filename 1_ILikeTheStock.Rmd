@@ -34,6 +34,7 @@ pacman::p_load(PlayerRatings,
                fredr,
                logger)
 if (!require(quantmod)) { install.packages('quantmod',repos = "http://cran.us.r-project.org") }
+remove.packages("tidyverse");install.packages("tidyverse")
 
 options(scipen=999)
 options(warn=-1)
