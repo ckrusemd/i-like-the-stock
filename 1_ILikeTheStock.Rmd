@@ -146,7 +146,6 @@ add_fomc_meeting_dates = function() {
 ```
 
 ```{r excel_nasdaq_screener}
-
 # Get Industry & Sector
 # https://www.nasdaq.com/market-activity/stocks/screener
 sector_industry_file = file.info(list.files(path = "Data",pattern = "nasdaq_screener",full.names = T)) %>% 
@@ -155,7 +154,10 @@ sector_industry_file = file.info(list.files(path = "Data",pattern = "nasdaq_scre
   row.names(.) %>% 
   read.csv(file = .) %>% 
   dplyr::select(Symbol,Sector,Industry)
+```
 
+
+```{r excel_nasdaq_screener_2}
 # Get all symbols
 df_stocks = stockSymbols() %>% 
   dplyr::select(Symbol,Name,Exchange,ETF) %>% 
