@@ -4,9 +4,8 @@ output: html_document
 ---
 
 ```{r}
-install.packages("cli")
+# install.packages("cli")
 if (!require(pacman)) { install.packages("pacman") }
-if (!require(quantmod)) { install.packages('quantmod',repos = "http://cran.us.r-project.org") }
 pacman::p_load(PlayerRatings,
                rvest,
                dplyr,
@@ -34,6 +33,7 @@ pacman::p_load(PlayerRatings,
                tidyquant,
                fredr,
                logger)
+if (!require(quantmod)) { install.packages('quantmod',repos = "http://cran.us.r-project.org") }
 
 options(scipen=999)
 options(warn=-1)
@@ -47,14 +47,14 @@ source("money_theme.R")
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,dev = "svg")
 ```
 
-```{r}
+```{r read_api_key}
 
 readRenviron(path = "Renviron.site")
 fredr::fredr_set_key(key = Sys.getenv("FRED_API"))
 ```
 
 
-```{r}
+```{r query_yahoo_function}
 
 query_yahoo = function(ticker) {
   getSymbols(ticker, env = NULL) %>% 
@@ -74,7 +74,7 @@ query_yahoo = function(ticker) {
 }
 ```
 
-```{r}
+```{r draw_chart_function}
 
 draw_chart = function(data,width_=1) {
   ggplot(data,aes(x=Date,y=Value)) +
@@ -99,7 +99,7 @@ draw_chart = function(data,width_=1) {
 }
 ```
 
-```{r}
+```{r fit_abline_function}
 fit_draw_abline = function(date1,date2,value1,value2) {
   
   data.frame(Date=c(date1,date2),
@@ -112,13 +112,13 @@ fit_draw_abline = function(date1,date2,value1,value2) {
 }
 ```
 
-```{r}
+```{r draw_support_resistance}
 draw_support_resistance = function(values) {
   geom_hline(yintercept = values,color="lightseagreen")
 }
 ```
 
-```{r}
+```{r fit_draw_fibonacci}
 fit_draw_fibonacci = function(low,high) {
   fibonaccis = round(low+(high-low)*c(0.236,0.382,0.50,0.618,0.786),digits = 1)
   list(geom_hline(yintercept = fibonaccis,linetype=2,color="gray60" ),
@@ -126,7 +126,7 @@ fit_draw_fibonacci = function(low,high) {
 }
 ```
 
-```{r }
+```{r add_fomc_meeting_dates}
 
 add_fomc_meeting_dates = function() {
   geom_vline(xintercept = c(ymd("2022-06-15"),
@@ -145,7 +145,7 @@ add_fomc_meeting_dates = function() {
 }
 ```
 
-```{r }
+```{r excel_nasdaq_screener}
 
 # Get Industry & Sector
 # https://www.nasdaq.com/market-activity/stocks/screener
@@ -171,13 +171,13 @@ df_stocks = stockSymbols() %>%
 
 ```
 
-```{r echo=FALSE}
+```{r settings, echo=FALSE}
 num_trees=100
 tune_grid=data.frame(mtry=c(15))
 train_control = caret::trainControl(method = "repeatedcv",number = 5,repeats = 5)
 ```
 
-```{r echo=FALSE}
+```{r all_datasets, echo=FALSE}
 
 df_gspc = query_yahoo(ticker = "^GSPC") 
 df_C25 = query_yahoo(ticker = "^OMXC25") 
