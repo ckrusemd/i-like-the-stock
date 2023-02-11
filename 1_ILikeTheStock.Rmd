@@ -169,13 +169,21 @@ df_stocks = df_stocks %>%
   filter(Exchange %in% c("NASDAQ","NYSE")) %>% 
   group_by(Symbol) %>% 
   filter(n()==1) %>% 
-  ungroup() %>% 
+  ungroup()
+```
+
+
+```{r excel_nasdaq_screener_4}
+df_stocks = df_stocks %>% 
   filter(!grepl("File Creation",Symbol)) %>% 
   filter(!grepl("AXAC-R",Symbol))%>% 
-  filter(!grepl("ZCZZT",Symbol)) %>% 
+  filter(!grepl("ZCZZT",Symbol))
+```
+
+
+```{r excel_nasdaq_screener_5}
+df_stocks = df_stocks %>% 
   inner_join(sector_industry_file)
-
-
 ```
 
 ```{r settings, echo=FALSE}
