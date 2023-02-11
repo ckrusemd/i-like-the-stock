@@ -16,6 +16,7 @@ pacman::p_load(tidyr,
                zoo,
                glue,
                TTR,
+               quantmod,
                rPref,
                lubridate)
 ```
