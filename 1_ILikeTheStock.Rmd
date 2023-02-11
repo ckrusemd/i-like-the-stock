@@ -179,6 +179,7 @@ df_stocks = df_stocks %>%
   filter(!grepl("File Creation",Symbol)) %>% 
   filter(!grepl("AXAC-R",Symbol))%>% 
   filter(!grepl("ZCZZT",Symbol))
+message(df_stocks)
 ```
 
 
