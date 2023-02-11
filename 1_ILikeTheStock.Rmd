@@ -154,6 +154,7 @@ sector_industry_file = file.info(list.files(path = "Data",pattern = "nasdaq_scre
   row.names(.) %>% 
   read.csv(file = .) %>% 
   dplyr::select(Symbol,Sector,Industry)
+message(sector_industry_file)
 ```
 
 
