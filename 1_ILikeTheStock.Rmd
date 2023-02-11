@@ -3,7 +3,24 @@ title: "I Like the Stock"
 output: html_document
 ---
 
-```{r}
+```{r echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+library(pacman)
+pacman::p_load(tidyr,
+               dplyr,
+               ggplot2,
+               httr,
+               rpart.plot,
+               pushoverr,
+               caret,
+               zoo,
+               glue,
+               rPref,
+               lubridate)
+```
+
+
+```{r eval=F}
 # install.packages("cli")
 if (!require(pacman)) { install.packages("pacman") }
 pacman::p_load(PlayerRatings,
@@ -43,10 +60,6 @@ source("money_theme.R")
 
 ```
 
-
-```{r}
-knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,dev = "svg")
-```
 
 ```{r read_api_key}
 
