@@ -2170,4 +2170,4 @@ df_elo_calculation_all_dates %>%
   geom_hline(yintercept = 50,linetype=2)  +
   geom_text(aes(label=Label),vjust=1,size=5)
 
-````
+```
