@@ -6,6 +6,12 @@ c25
 btc-usd
 gold
 oil
+tlt
+dxy
+vix
+eurusd
+jpydkk
+chfdkk
 technical-analysis
 sp500-1
 c25-1
@@ -18,5 +24,3 @@ industries
 biggest-caps-by-sector
 sector-rotations
 elo-approach
-etf
-nordnet-etfer
