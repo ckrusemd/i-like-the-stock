@@ -417,6 +417,7 @@ predict_by_yields = function(data)  {
     # df_STOCKS_JPYDKK = predict_by_yields(data = df_JPYDKK) 
     # df_STOCKS_CHFDKK = predict_by_yields(data = df_CHFDKK) 
     
+detach(package:randomForest,unload=TRUE)
 ```
 
 # Summary
