@@ -172,13 +172,13 @@ df_stocks = stockSymbols() %>%
 
 ```
 
-```{r settings echo=FALSE}
+```{r echo=FALSE}
 num_trees=100
 tune_grid=data.frame(mtry=c(15))
 train_control = caret::trainControl(method = "repeatedcv",number = 5,repeats = 5)
 ```
 
-```{r tickers echo=FALSE}
+```{r echo=FALSE}
 
 df_gspc = query_yahoo(ticker = "^GSPC") 
 df_C25 = query_yahoo(ticker = "^OMXC25") 
@@ -212,7 +212,7 @@ df_VIX = query_yahoo(ticker = "^VIX")
 
 ```
 
-```{r yieldcurve echo=FALSE}
+```{r echo=FALSE}
 order_ = c("DFF",
             "DGS1MO",
             "DGS3MO",
