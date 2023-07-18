@@ -40,6 +40,7 @@ install.packages('quantmod',repos = "http://cran.us.r-project.org")
                  tidyquant,
                  fredr,
                  logger)
+pacman::p_load(randomForest)
 
 options(scipen=999)
 options(warn=-1)
