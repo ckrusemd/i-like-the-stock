@@ -1,0 +1,576 @@
+---
+title: "Time to Event Stocks, 10%"
+author: "Christian Kruse"
+date: "2023 July 19"
+output: html_document
+---
+
+```{r  include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+options(scipen=999)
+```
+
+```{r}
+
+if (!require(pacman)) { install.packages("pacman") }
+pacman::p_load(knitr,
+               fredr,
+               dplyr,
+               tidyr,
+               lubridate,
+               caret,
+               partykit,
+               pROC,
+               gganimate,
+               devtools,
+               irr,
+               openxlsx,
+               httr,
+               dkstat,
+               data.table,
+               pROC,
+               rPref,
+               progress,
+               quantmod,
+               rvest,
+               ggrepel)
+# source(file = "money_theme.R")
+```
+
+## ETFs data
+
+```{r}
+
+df_etfs = openxlsx::read.xlsx(xlsxFile = "~/Dropbox/R/money-printer-go-brrr/vignettes/Data/etf_list.xlsx")
+
+df_etf_yahoo = rbindlist(lapply(df_etfs$Ticker,function(ticker) {
+      temp_df = getSymbols(ticker, env = NULL) %>% 
+      as.data.frame(.) %>% 
+      dplyr::mutate(Date=row.names(.)) %>% 
+      dplyr::mutate(Date=gsub("X","",Date)) %>% 
+      dplyr::mutate(Date=ymd(Date)) %>% 
+      dplyr::select(c(7,1)) %>% 
+      setNames(.,c("date","value")) %>% 
+      dplyr::mutate(series_id=ticker)# %>% 
+      # tidyr::complete(date=seq.Date(from=min(date,na.rm=T),to=Sys.Date(),by="1 day")) %>% 
+      # tidyr::fill(value,.direction = "down")  %>% 
+      # tidyr::fill(series_id,.direction = "down") 
+      
+      row.names(temp_df) = NULL
+      return( temp_df )
+}))
+```
+
+### Yahoo
+
+```{r}
+df_top_market_cap = read.csv(file = "~/Dropbox/R/money-printer-go-brrr/vignettes/Data/nasdaq_screener_1649872205540.csv") %>% 
+  arrange(desc(Market.Cap)) %>% 
+  head(200) %>% 
+  pull(Symbol) #%>% 
+  # sample(10)
+```
+
+```{r}
+
+series_ids_yahoo = c(df_top_market_cap,unique(c(#"AAPL",
+                            # "JNJ",
+                            # "MSFT",C
+                            "GC=F",
+                            "SI=F",
+                            # "DX-Y.NYB",
+                            # "BTC-USD",
+                            # "ETH-USD",
+                            # "PA=F",
+                            "^IXIC",
+                            "^GSPC",
+                            "^OMXC25"#,
+                            # "USDDKK=X"
+                            )))
+
+library(progress)
+# pb <- progress_bar$new(
+# format = "[:bar] :current/:total (:percent) - :what - eta: :eta , :elapsedfull", total = length(series_ids_yahoo), width = 60)
+
+df_macro_yahoo = rbindlist(lapply(series_ids_yahoo,function(ticker) {
+    # pb$tick(tokens = list(what = ticker))
+      temp_df = tryCatch(expr = { getSymbols(ticker, env = NULL) %>% 
+      as.data.frame(.) %>% 
+      dplyr::mutate(Date=row.names(.)) %>% 
+      dplyr::mutate(Date=gsub("X","",Date)) %>% 
+      dplyr::mutate(Date=ymd(Date)) %>% 
+      dplyr::select(c(7,1)) %>% 
+      setNames(.,c("date","value")) %>% 
+      dplyr::mutate(series_id=ticker) },error=function(e) {data.frame()})
+      
+      row.names(temp_df) = NULL
+      return( temp_df )
+})) %>% 
+  # bind_rows( df_etf_yahoo ) %>% 
+  na.omit()
+```
+
+# Outcomes
+
+```{r}
+find_increase = function(data) {
+  # print(data)
+  first_value = data[1]
+  incr_value = first_value*1.10
+  which(data>=incr_value)[1]
+}
+
+find_chg_abs = function(data) {
+  # print(data)
+  first_value = data[1]
+  incr_value = tail(data,1)
+  100*(first_value/incr_value-1)
+}
+
+find_decrease = function(data) {
+  # print(data)
+  first_value = data[1]
+  decr_value = first_value*0.9
+  which(data<=decr_value)[1]
+}
+
+df_cox = df_macro_yahoo %>% 
+  group_by(series_id) %>% 
+  filter(n()>200) %>% 
+  dplyr::mutate(eofu_chg=rollapply(data = value, 30, find_chg_abs,fill=NA,align="right")) %>% 
+  dplyr::mutate(eofu_time_incr=rollapply(data = value, 30, find_increase,fill=NA,align="right")) %>% 
+  dplyr::mutate(eofu_time_decr=rollapply(data = value, 30, find_decrease,fill=NA,align="right")) %>% 
+  tail(-100) %>%
+  dplyr::mutate(eofu_bool_incr=ifelse(is.na(eofu_time_incr),0,1)) %>% 
+  dplyr::mutate(eofu_bool_decr=ifelse(is.na(eofu_time_decr),0,1)) %>% 
+  replace_na(list(eofu_time_incr=100,eofu_time_decr=100))
+```
+
+```{r}
+prop.table( table(df_cox$eofu_bool_incr) )
+prop.table( table(df_cox$eofu_bool_decr) )
+```
+
+# Covariates
+
+```{r}
+
+lm_coefs = function(data) {
+  # print(data)
+  lm_exp = lm(log(value)~date,data=data.frame(date=seq(1,14,by=1),value=data))
+  lm_lin = lm(value~date,data=data.frame(date=seq(1,14,by=1),value=data))
+  return( data.frame(lin_coef_14=summary(lm_lin)$coefficients[2,1],
+                     lin_rsq_14=summary(lm_lin)$r.squared,
+                     exp_coef_14=exp(summary(lm_exp)$coefficients[2,1] ),
+                     exp_rsq_14=summary(lm_exp)$r.squared ) )
+}
+
+# df_covariate_r2_lm = df_macro_yahoo %>% 
+#   group_by(series_id) %>% 
+#   # head(10000) %>% 
+#   filter(n()>200) %>% 
+#   dplyr::mutate(coef=rollapply(data = value, 14, lm_coefs,fill=NA,align="right")) %>% 
+#   pull(coef) %>% 
+#   data.frame() %>% 
+#   setNames(.,c("lin_coef_14","lin_rsq_14","exp_coef_14","exp_rsq_14"))
+
+df_covariates = df_macro_yahoo %>% 
+  group_by(series_id) %>% 
+  filter(n()>200) %>% 
+  dplyr::mutate(rsi_14=TTR::RSI(value,na.rm=T),
+                sma50_200=TTR::SMA(value,n=50)-TTR::SMA(value,n=200),
+                macd_osc=TTR::MACD(value)[,1],
+                macd_signal=TTR::MACD(value)[,2],
+                macd_osc_signal=TTR::MACD(value)[,1]-TTR::MACD(value)[,2],
+                bbands_pctb=TTR::BBands(value)[,4],
+                cci=TTR::CCI(value)[,1],
+                momentum=TTR::momentum(value),
+                pct=pnorm(value,mean=mean(value),sd=sd(value)),
+                # adx=TTR::ADX(value)[,3],
+                cmo=TTR::CMO(value),
+                gain_pct_30_days=100*((value/lag(value,30))-1))# %>% 
+  # bind_cols(df_covariate_r2_lm)
+ 
+```
+
+
+# Model
+
+```{r}
+df_model = df_cox %>% 
+  left_join(df_covariates) %>% 
+  na.omit() %>% 
+  ungroup()
+```
+
+## Explore
+
+```{r}
+# df_model %>% 
+#   ggplot(.,aes(x=exp_rsq_14,eofu_chg)) +
+#   geom_point(size=0.3)
+```
+
+```{r}
+# df_model %>% 
+#   ggplot(.,aes(x=exp_coef_14,eofu_chg)) +
+#   geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=gain_pct_30_days,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=cmo,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=pct,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=momentum,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=cci,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=bbands_pctb,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=macd_signal,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=sma50_200,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+df_model %>% 
+  ggplot(.,aes(x=rsi_14,eofu_chg)) +
+  geom_point(size=0.3)
+```
+
+```{r}
+# df_model %>% 
+#   ggplot(.,aes(x=lin_coef_14,eofu_chg)) +
+#   geom_point(size=0.3)
+```
+
+## Cox
+```{r}
+library(survival)
+library(survminer)
+fit_surv_incr = survfit(Surv(eofu_time_incr,eofu_bool_incr) ~ series_id,data=df_cox)
+fit_surv_decr = survfit(Surv(eofu_time_decr,eofu_bool_decr) ~ series_id,data=df_cox)
+```
+
+
+```{r}
+
+fit_coxph_incr = coxph(Surv(eofu_time_incr,eofu_bool_incr)~series_id + rsi_14 + sma50_200 + macd_osc + macd_signal + macd_osc_signal + bbands_pctb + cci + momentum + pct,
+                  data=df_model )
+# fit_coxph_incr_aic = MASS::stepAIC(fit_coxph_incr)
+
+fit_coxph_decr = coxph(Surv(eofu_time_decr,eofu_bool_decr)~series_id + rsi_14 + sma50_200 + macd_osc + macd_signal + macd_osc_signal + bbands_pctb + cci + momentum + pct,
+                  data=df_model )
+# fit_coxph_decr_aic = MASS::stepAIC(fit_coxph_decr)
+
+summary(fit_coxph_incr)
+summary(fit_coxph_decr)
+```
+
+
+```{r}
+summary(fit_coxph_incr)$coefficients %>% 
+  data.frame() %>% 
+  dplyr::select(2) %>% 
+  setNames(.,"exp_coef") %>% 
+  arrange(desc(exp_coef))
+```
+
+```{r}
+summary(fit_coxph_decr)$coefficients %>% 
+  data.frame() %>% 
+  dplyr::select(2) %>% 
+  setNames(.,"exp_coef") %>% 
+  arrange(desc(exp_coef))
+```
+
+
+# Testing
+
+```{r}
+df_testing = df_model %>% 
+  ungroup() %>% 
+  dplyr::mutate(relative_risk_incr=predict(fit_coxph_incr,.,type="risk")) %>%
+  dplyr::mutate(relative_risk_decr=predict(fit_coxph_decr,.,type="risk")) %>%
+  dplyr::mutate(rel_risk=relative_risk_incr/relative_risk_decr) %>% 
+  dplyr::select(relative_risk_incr,relative_risk_decr,rel_risk,eofu_bool_incr,eofu_bool_decr)
+```
+
+## Above cutoff
+
+```{r}
+# Incr and Decr from relative_risk_incr
+df_cutoff_relative_risk_incr = do.call("rbind",lapply(c(0,0.25,0.5,0.75,seq(1,30,by=1)),function(cutoff) {
+  
+  df_testing %>% 
+    filter(relative_risk_incr>=cutoff) %>% 
+    dplyr::summarize(tpr=sum(eofu_bool_incr)/nrow(.),
+                     fpr=sum(eofu_bool_decr)/nrow(.)) %>% 
+    ungroup() %>% 
+    dplyr::mutate(cutoff=cutoff)
+  
+}))
+
+df_cutoff_relative_risk_incr %>% 
+  dplyr::mutate(diff=tpr-fpr) %>% 
+  ggplot(.,aes(x=cutoff,y=tpr)) +
+  geom_line() +
+  geom_line(aes(x=cutoff,y=fpr)) +
+  geom_line(aes(x=cutoff,y=diff),color="lightsteelblue")
+```
+
+
+```{r}
+# Incr and Decr from relative_risk_decr
+df_cutoff_relative_risk_decr = do.call("rbind",lapply(c(0,0.25,0.5,0.75,seq(1,300,by=1)),function(cutoff) {
+  
+  df_testing %>% 
+    filter(relative_risk_decr>=cutoff) %>% 
+    dplyr::summarize(tpr=sum(eofu_bool_decr)/nrow(.),
+                     fpr=sum(eofu_bool_incr)/nrow(.)) %>% 
+    ungroup() %>% 
+    dplyr::mutate(cutoff=cutoff)
+  
+}))
+
+df_cutoff_relative_risk_decr %>% 
+  dplyr::mutate(diff=tpr-fpr) %>% 
+  ggplot(.,aes(x=cutoff,y=tpr)) +
+  geom_line() +
+  geom_line(aes(x=cutoff,y=fpr)) +
+  geom_line(aes(x=cutoff,y=diff),color="lightsteelblue")
+
+```
+
+## Below cutoff
+
+```{r}
+# Incr and Decr from relative_risk_incr
+do.call("rbind",lapply(c(0,0.25,0.5,0.75,seq(1,30,by=1)),function(cutoff) {
+  
+  df_testing %>% 
+    filter(relative_risk_incr<=cutoff) %>% 
+    dplyr::summarize(tpr=sum(eofu_bool_decr==0)/nrow(.),
+                     fpr=sum(eofu_bool_incr==0)/nrow(.)) %>% 
+    ungroup() %>% 
+    dplyr::mutate(cutoff=cutoff)
+  
+})) %>% 
+  dplyr::mutate(diff=tpr-fpr) %>% 
+  ggplot(.,aes(x=cutoff,y=tpr)) +
+  geom_line() +
+  geom_line(aes(x=cutoff,y=fpr)) +
+  geom_line(aes(x=cutoff,y=diff),color="lightsteelblue")
+```
+
+
+```{r}
+# Incr and Decr from relative_risk_decr
+do.call("rbind",lapply(c(0,0.25,0.5,0.75,seq(1,300,by=1)),function(cutoff) {
+  
+  df_testing %>% 
+    filter(relative_risk_decr<=cutoff) %>% 
+    dplyr::summarize(tpr=sum(eofu_bool_decr==0)/nrow(.),
+                     fpr=sum(eofu_bool_incr==0)/nrow(.)) %>% 
+    ungroup() %>% 
+    dplyr::mutate(cutoff=cutoff)
+  
+})) %>% 
+  dplyr::mutate(diff=tpr-fpr) %>% 
+  ggplot(.,aes(x=cutoff,y=tpr)) +
+  geom_line() +
+  geom_line(aes(x=cutoff,y=fpr)) +
+  geom_line(aes(x=cutoff,y=diff),color="lightsteelblue")
+
+```
+
+
+```{r eval=F}
+df_testing %>% 
+  group_by(relative_risk_incr_cut) %>% 
+  dplyr::summarize(freq_true=sum(eofu_bool_incr)/n(),
+                   freq_false=sum(eofu_bool_incr==0)/n()) %>% 
+  gather(stat,val,freq_true:freq_false) %>% 
+  ggplot(.,aes(x=relative_risk_incr_cut,y=val,fill=stat)) +
+  geom_col()
+
+df_testing %>% 
+  group_by(relative_risk_decr_cut) %>%  
+  dplyr::summarize(freq_true=sum(eofu_bool_incr)/n(),
+                   freq_false=sum(eofu_bool_incr==0)/n()) %>% 
+  gather(stat,val,freq_true:freq_false) %>% 
+  ggplot(.,aes(x=relative_risk_decr_cut,y=val,fill=stat)) +
+  geom_col()
+
+```
+
+```{r}
+roc_incr = pROC::roc(predictor=df_testing$relative_risk_incr,response=df_testing$eofu_bool_incr)
+best_incr = coords(roc_incr,x="best",best.method="youden")$threshold
+coords(roc_incr) %>% 
+  sample_n(10000) %>% 
+  gather(stat,val,specificity:sensitivity) %>% 
+  filter(threshold<20) %>% 
+  ggplot(.,aes(x=threshold,y=val,color=stat)) +
+  geom_line()
+```
+
+
+```{r}
+roc_decr = pROC::roc(predictor=df_testing$relative_risk_decr,response=df_testing$eofu_bool_decr)
+best_decr = coords(roc_decr,x="best",best.method="youden")$threshold
+coords(roc_decr) %>% 
+  sample_n(10000) %>% 
+  gather(stat,val,specificity:sensitivity) %>% 
+  filter(threshold<10) %>% 
+  ggplot(.,aes(x=threshold,y=val,color=stat)) +
+  geom_line()
+```
+
+
+
+# Prediction going forward
+
+```{r}
+
+# Extra trading day with 5% drop
+df_extra_day = df_macro_yahoo %>% 
+  group_by(series_id) %>% 
+  filter(n()>200) %>% 
+  filter(date==max(date,na.rm=T)) %>% 
+  dplyr::mutate(date=date+days(1),
+                value=value*0.95)
+
+# Re-calc
+df_covariate_r2_lm = df_macro_yahoo %>% 
+  group_by(series_id) %>% 
+  # head(10000) %>% 
+  filter(n()>200) %>% 
+  bind_rows(df_extra_day) %>% 
+  dplyr::mutate(coef=rollapply(data = value, 14, lm_coefs,fill=NA,align="right")) %>% 
+  pull(coef) %>% 
+  data.frame() %>% 
+  setNames(.,c("lin_coef_14","lin_rsq_14","exp_coef_14","exp_rsq_14"))
+
+df_covariates = df_macro_yahoo %>% 
+  group_by(series_id) %>% 
+  filter(n()>200) %>% 
+  bind_rows(df_extra_day) %>% 
+  dplyr::mutate(rsi_14=TTR::RSI(value,na.rm=T),
+                sma50_200=TTR::SMA(value,n=50)-TTR::SMA(value,n=200),
+                macd_osc=TTR::MACD(value)[,1],
+                macd_signal=TTR::MACD(value)[,2],
+                macd_osc_signal=TTR::MACD(value)[,1]-TTR::MACD(value)[,2],
+                bbands_pctb=TTR::BBands(value)[,4],
+                cci=TTR::CCI(value)[,1],
+                momentum=TTR::momentum(value),
+                pct=pnorm(value,mean=mean(value),sd=sd(value)),
+                # adx=TTR::ADX(value)[,3],
+                cmo=TTR::CMO(value),
+                gain_pct_30_days=100*((value/lag(value,30))-1)) %>% 
+  bind_cols( df_covariate_r2_lm )
+
+# Prediction
+df_predict = df_covariates %>% 
+  group_by(series_id) %>% 
+  top_n(n = 2,wt=date) %>% 
+  ungroup() %>% 
+  arrange(series_id,date) %>% 
+  dplyr::mutate(relative_risk_incr=predict(fit_coxph_incr,.,type="risk")) %>%
+  dplyr::mutate(relative_risk_decr=predict(fit_coxph_decr,.,type="risk")) %>%
+  dplyr::mutate(rel_risk=relative_risk_incr/relative_risk_decr) %>%
+  arrange(desc(rel_risk))
+```
+
+
+```{r}
+order_ = df_predict %>% group_by(series_id) %>% filter(date==max(date)) %>% arrange(relative_risk_incr) %>% pull(series_id)
+df_predict %>% 
+  dplyr::mutate(cutoff=cut(relative_risk_incr,breaks=c(0,0.25,0.5,0.75,seq(1,50,by=1)))) %>% 
+  inner_join(df_cutoff_relative_risk_incr %>% 
+               dplyr::mutate(cutoff=cut(cutoff,breaks=c(0,0.25,0.5,0.75,seq(1,50,by=1))))) %>% 
+  dplyr::mutate(date=factor(date),
+                series_id=factor(series_id,levels=order_),
+                label_=paste0(scales::percent(tpr,1)," / ",scales::percent(fpr,1))) %>% 
+  dplyr::mutate(relative_risk_incr=log(relative_risk_incr)) %>% 
+  ggplot(.,aes(x=series_id,y=relative_risk_incr,color=date)) +
+  geom_point() +
+  geom_text(aes(label=label_)) +
+  coord_flip()
+```
+
+```{r}
+
+library(rPref)
+library(ggrepel)
+psel = high(relative_risk_incr) * low(relative_risk_decr)
+
+
+psel(df_predict %>% group_by(series_id) %>% filter(date==max(date)), psel, top = nrow(df_predict)) %>% 
+  filter(.level<=2) %>% 
+  filter(relative_risk_decr<2) %>% 
+  dplyr::mutate(.level=factor(.level)) %>% 
+  ggplot(.,aes(y=rel_risk,x=relative_risk_incr,color=.level)) +
+  geom_line() +
+  # geom_point(aes(size=rel_risk)) +
+  geom_hline(yintercept = 1,linetype=2) +
+  geom_vline(xintercept = 1,linetype=2) +
+  ggrepel::geom_text_repel(aes(label=series_id)) #+
+  # scale_x_continuous(limits=c(0,2))
+
+
+psel(df_predict %>% group_by(series_id) %>% filter(date==max(date)), psel, top = nrow(df_predict)) %>% 
+  filter(.level<=2) %>% 
+  filter(relative_risk_decr<2) %>% 
+  dplyr::mutate(.level=factor(.level)) %>% 
+  ggplot(.,aes(x=relative_risk_decr,y=relative_risk_incr,color=.level)) +
+  geom_line() +
+  geom_point(aes(size=rel_risk)) +
+  geom_hline(yintercept = best_incr,linetype=2) +
+  geom_vline(xintercept = best_decr,linetype=2) +
+  ggrepel::geom_text_repel(aes(label=series_id)) +
+  scale_x_continuous(limits=c(0,2))
+```
+
+
+
+## Best buy the dip
+
+```{r}
+df_predict %>% 
+  arrange(desc(relative_risk_decr))
+```
+
