@@ -41,7 +41,7 @@ pacman::p_load(knitr,
 
 ```{r}
 
-df_etfs = openxlsx::read.xlsx(xlsxFile = "~/Dropbox/R/money-printer-go-brrr/vignettes/Data/etf_list.xlsx")
+df_etfs = openxlsx::read.xlsx(xlsxFile = "Data/etf_list.xlsx")
 
 df_etf_yahoo = rbindlist(lapply(df_etfs$Ticker,function(ticker) {
       temp_df = getSymbols(ticker, env = NULL) %>% 
@@ -64,7 +64,7 @@ df_etf_yahoo = rbindlist(lapply(df_etfs$Ticker,function(ticker) {
 ### Yahoo
 
 ```{r}
-df_top_market_cap = read.csv(file = "~/Dropbox/R/money-printer-go-brrr/vignettes/Data/nasdaq_screener_1649872205540.csv") %>% 
+df_top_market_cap = read.csv(file = "Data/nasdaq_screener_1649872205540.csv") %>% 
   arrange(desc(Market.Cap)) %>% 
   head(200) %>% 
   pull(Symbol) #%>% 
