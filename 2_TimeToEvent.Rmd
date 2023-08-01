@@ -32,6 +32,7 @@ pacman::p_load(knitr,
                rPref,
                progress,
                quantmod,
+               survminer,
                rvest,
                ggrepel)
 # source(file = "money_theme.R")
