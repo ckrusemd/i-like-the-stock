@@ -114,23 +114,24 @@
 <div id="best-buy-the-dip" class="section level2 hasAnchor" number="6.1">
 <h2><span class="header-section-number">6.1</span> Best buy the dip<a href="prediction-going-forward.html#best-buy-the-dip" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <pre><code>## # A tibble: 394 × 21
-##    date       value series_id rsi_14 sma50_200 macd_osc macd_…¹ macd_…² bbands…³
-##    &lt;date&gt;     &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
-##  1 2023-08-15  95.8 MRNA        25.0   -30.9      -5.93   -4.37  -1.56   0.0795 
-##  2 2023-08-14 101.  MRNA        29.1   -30.4      -5.48   -3.98  -1.50   0.150  
-##  3 2023-08-15 158.  EL          23.5   -39.1      -3.76   -3.19  -0.572 -0.0647 
-##  4 2023-08-15  75.3 EW          24.1     6.15     -4.09   -3.24  -0.856  0.137  
-##  5 2023-08-15  11.4 F           20.7     0.976    -4.19   -2.79  -1.40  -0.103  
-##  6 2023-08-15  51.8 SHOP        24.9    14.1      -4.62   -2.44  -2.19   0.00805
-##  7 2023-08-14 167.  EL          30.1   -38.8      -3.37   -3.05  -0.319  0.156  
-##  8 2023-08-15 144.  SNOW        29.9    19.0      -4.07   -2.31  -1.76  -0.0261 
-##  9 2023-08-15 256.  HCA         23.4    22.9      -2.30   -1.78  -0.520 -0.0606 
-## 10 2023-08-14  54.5 SHOP        28.9    14.4      -3.92   -1.89  -2.02   0.0677 
-## # … with 384 more rows, 12 more variables: cci &lt;dbl&gt;, momentum &lt;dbl&gt;,
-## #   pct &lt;dbl&gt;, cmo &lt;dbl&gt;, gain_pct_30_days &lt;dbl&gt;, lin_coef_14 &lt;dbl&gt;,
-## #   lin_rsq_14 &lt;dbl&gt;, exp_coef_14 &lt;dbl&gt;, exp_rsq_14 &lt;dbl&gt;,
-## #   relative_risk_incr &lt;dbl&gt;, relative_risk_decr &lt;dbl&gt;, rel_risk &lt;dbl&gt;, and
-## #   abbreviated variable names ¹​macd_signal, ²​macd_osc_signal, ³​bbands_pctb</code></pre>
+##    date       value serie…¹ rsi_14 sma50…² macd_…³ macd_…⁴ macd_…⁵ bband…⁶   cci
+##    &lt;date&gt;     &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+##  1 2023-08-16  93.8 MRNA      23.4 -31.3     -6.21   -4.71  -1.51   0.0753 -124.
+##  2 2023-08-15  98.7 MRNA      27.2 -30.8     -5.71   -4.33  -1.38   0.139  -105.
+##  3 2023-08-16  42.8 SE        21.2  -4.80    -5.35   -2.07  -3.28  -0.215  -270.
+##  4 2023-08-16  11.5 F         21.1   0.968   -4.33   -3.03  -1.29  -0.0582 -188.
+##  5 2023-08-16  52.9 SHOP      28.7  14.0     -4.58   -2.78  -1.80   0.0789 -120.
+##  6 2023-08-16 144.  SNOW      29.6  18.6     -4.26   -2.64  -1.62  -0.0146 -153.
+##  7 2023-08-16 157.  EL        22.3 -39.3     -3.86   -3.27  -0.585 -0.110  -199.
+##  8 2023-08-15 165.  EL        28.6 -39.0     -3.44   -3.13  -0.318  0.125  -119.
+##  9 2023-08-15 152.  SNOW      34.2  19.1     -3.69   -2.23  -1.45   0.104  -124.
+## 10 2023-08-15  12.1 F         26.2   0.986   -3.79   -2.71  -1.08   0.0659 -139.
+## # … with 384 more rows, 11 more variables: momentum &lt;dbl&gt;, pct &lt;dbl&gt;,
+## #   cmo &lt;dbl&gt;, gain_pct_30_days &lt;dbl&gt;, lin_coef_14 &lt;dbl&gt;, lin_rsq_14 &lt;dbl&gt;,
+## #   exp_coef_14 &lt;dbl&gt;, exp_rsq_14 &lt;dbl&gt;, relative_risk_incr &lt;dbl&gt;,
+## #   relative_risk_decr &lt;dbl&gt;, rel_risk &lt;dbl&gt;, and abbreviated variable names
+## #   ¹​series_id, ²​sma50_200, ³​macd_osc, ⁴​macd_signal, ⁵​macd_osc_signal,
+## #   ⁶​bbands_pctb</code></pre>
 
 </div>
 </div>
